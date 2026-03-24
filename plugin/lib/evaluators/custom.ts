@@ -81,7 +81,7 @@ export function validateRegisteredCommands(
     // Verify hash integrity
     const hashCheck = verifyCommandHash(c);
     if (!hashCheck.valid) {
-      errors.push({ constraintId: c.id, error: hashCheck.error! });
+      errors.push({ constraintId: c.id, error: hashCheck.error ?? "Unknown hash verification error" });
       continue;
     }
 

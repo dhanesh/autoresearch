@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { initLoopState } from "../src/loop";
 import {
   buildReport,
   formatConvergenceMessage,
   renderReportMarkdown,
 } from "../src/report";
-import { initLoopState } from "../src/loop";
 import type { IterationScores, LoopConfig } from "../src/types";
 import { DEFAULTS } from "../src/types";
 

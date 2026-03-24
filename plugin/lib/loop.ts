@@ -11,6 +11,11 @@ import type {
   NormalizedScore,
 } from "./types";
 
+/** Get the most recent iteration from state, or undefined if none exist */
+function lastIteration(state: LoopState): IterationScores | undefined {
+  return state.iterations[state.iterations.length - 1];
+}
+
 /** Initialize a new loop state with baseline scores. Satisfies: RT-2, RT-6, T1 */
 export function initLoopState(
   config: LoopConfig,
@@ -138,10 +143,7 @@ export function processIterationResults(
 ): IterationProcessResult {
   const { scores, compositeScore } = computeComposite(results);
 
-  const prevComposite =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].compositeScore
-      : state.baseline.compositeScore;
+  const prevComposite = lastIteration(state)?.compositeScore ?? state.baseline.compositeScore;
 
   const delta = compositeScore - prevComposite;
 
@@ -221,7 +223,7 @@ export function updateState(
 
 /** Format live progress line for display. Satisfies: U1 */
 export function formatProgress(state: LoopState): string {
-  const latest = state.iterations[state.iterations.length - 1];
+  const latest = lastIteration(state);
   const elapsed = Math.round(
     (Date.now() - new Date(state.startedAt).getTime()) / 1000
   );

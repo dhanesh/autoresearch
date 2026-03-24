@@ -2,7 +2,12 @@
 // Satisfies: U3 (Convergence Communication)
 // Summary report generator — produces the final markdown report
 
-import type { AutoresearchReport, LoopState } from "./types";
+import type { AutoresearchReport, IterationScores, LoopState } from "./types";
+
+/** Get the most recent iteration from state, or undefined if none exist */
+function lastIteration(state: LoopState): IterationScores | undefined {
+  return state.iterations[state.iterations.length - 1];
+}
 
 /** Build the final report from loop state. Satisfies: B3, U1, TN7 */
 export function buildReport(
@@ -10,10 +15,8 @@ export function buildReport(
   learningReport?: string
 ): AutoresearchReport {
   const improvement: Record<string, number> = {};
-  const finalScores =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].scores
-      : state.baseline.scores;
+  const latest = lastIteration(state);
+  const finalScores = latest?.scores ?? state.baseline.scores;
 
   for (const [id, baselineScore] of Object.entries(state.baseline.scores)) {
     const finalScore = finalScores[id] ?? baselineScore;
@@ -25,10 +28,7 @@ export function buildReport(
   }
 
   const baselineComposite = state.baseline.compositeScore;
-  const finalComposite =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].compositeScore
-      : baselineComposite;
+  const finalComposite = latest?.compositeScore ?? baselineComposite;
   const compositeImprovement =
     baselineComposite > 0
       ? ((finalComposite - baselineComposite) / baselineComposite) * 100
@@ -147,20 +147,19 @@ export function renderReportMarkdown(report: AutoresearchReport): string {
 
 /** Format convergence communication for auto-stop display. Satisfies: U3 */
 export function formatConvergenceMessage(state: LoopState): string {
-  const last = state.iterations.slice(-state.config.plateauWindow);
-  const deltas = last.map((i) => i.delta.toFixed(2)).join(", ");
-  const totalImprovement =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].compositeScore -
-        state.baseline.compositeScore
-      : 0;
+  const plateauSlice = state.iterations.slice(-state.config.plateauWindow);
+  const deltas = plateauSlice.map((i) => i.delta.toFixed(2)).join(", ");
+  const latest = lastIteration(state);
+  const totalImprovement = latest
+    ? latest.compositeScore - state.baseline.compositeScore
+    : 0;
 
   return `
 Autoresearch loop auto-stopped: diminishing returns detected.
 
 Last ${state.config.plateauWindow} iteration deltas: [${deltas}]
 Threshold: ${state.config.convergenceThreshold}
-Total improvement: ${totalImprovement >= 0 ? "+" : ""}${totalImprovement.toFixed(1)} points (${state.baseline.compositeScore} → ${state.iterations[state.iterations.length - 1]?.compositeScore ?? state.baseline.compositeScore})
+Total improvement: ${totalImprovement >= 0 ? "+" : ""}${totalImprovement.toFixed(1)} points (${state.baseline.compositeScore} → ${latest?.compositeScore ?? state.baseline.compositeScore})
 Iterations completed: ${state.currentIteration}/${state.config.maxIterations}
 
 To resume: /autoresearch --resume

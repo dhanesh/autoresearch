@@ -4,13 +4,24 @@
 // Constraint discovery engine — analyzes codebase and builds evaluation constraints
 
 import { hashCommand } from "./evaluators/custom";
-import type { CodebaseProfile, EvalConstraint, UnhashedConstraint } from "./types";
+import type { CodebaseProfile, EvalConstraint, EvalMechanism, UnhashedConstraint } from "./types";
+
+/** What a file pattern indicates about the codebase */
+export interface IntrospectionIndicator {
+  language?: string;
+  framework?: string;
+  tool?: string;
+  toolType?: string;
+}
+
+/** A rule mapping a file pattern to codebase characteristics */
+export interface IntrospectionRule {
+  pattern: string;
+  indicates: IntrospectionIndicator;
+}
 
 /** File patterns that indicate language/framework. Satisfies: RT-7 */
-export const INTROSPECTION_RULES: {
-  pattern: string;
-  indicates: { language?: string; framework?: string; tool?: string; toolType?: string };
-}[] = [
+export const INTROSPECTION_RULES: IntrospectionRule[] = [
   // JavaScript/TypeScript ecosystem
   { pattern: "package.json", indicates: { language: "typescript", tool: "npm/bun" } },
   { pattern: "tsconfig.json", indicates: { language: "typescript", toolType: "typeChecker" } },
@@ -46,8 +57,14 @@ export const INTROSPECTION_RULES: {
   { pattern: ".golangci.yml", indicates: { tool: "golangci-lint", toolType: "linter" } },
 ];
 
+/** Mapping from a detected tool to the shell command that evaluates it */
+export interface ToolCommand {
+  command: string;
+  mechanism: Extract<EvalMechanism, "static" | "tests">;
+}
+
 /** Map detected tools to evaluation commands. Satisfies: RT-8 */
-export const TOOL_TO_COMMAND: Record<string, { command: string; mechanism: "static" | "tests" }> = {
+export const TOOL_TO_COMMAND: Record<string, ToolCommand> = {
   // Linters
   eslint: { command: "npx eslint . --format json 2>&1 || true", mechanism: "static" },
   biome: { command: "npx biome check . --reporter json 2>&1 || true", mechanism: "static" },

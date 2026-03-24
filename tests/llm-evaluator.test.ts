@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import {
   LLM_RUBRIC_DIMENSIONS,
   buildLlmEvalPrompt,
@@ -5,7 +6,6 @@ import {
   parseLlmEvalResponse,
   shouldRunLlmEval,
 } from "../src/evaluators/llm";
-import { describe, expect, it } from "vitest";
 
 describe("LLM_RUBRIC_DIMENSIONS", () => {
   it("should have 4 dimensions with weights summing to 1", () => {

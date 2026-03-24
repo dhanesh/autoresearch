@@ -70,12 +70,38 @@ function clampScore(value: number): NormalizedScore {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+/** Patterns that indicate potentially destructive shell operations. Satisfies: S3 */
+const DANGEROUS_PATTERNS = [
+  /\brm\s+-[rR]f?\b/, // recursive delete
+  /\brm\s+.*\*/, // wildcard delete
+  /\bchmod\s+777\b/, // world-writable permissions
+  /\bcurl\b.*\|\s*\bsh\b/, // pipe-to-shell
+  /\beval\b/, // eval injection vector
+  /\b>\s*\/dev\/sd[a-z]/, // device overwrites
+] as const;
+
+/** Check a command string for dangerous patterns. Satisfies: S3 */
+function detectDangerousPatterns(command: string): string | null {
+  for (const pattern of DANGEROUS_PATTERNS) {
+    if (pattern.test(command)) {
+      return `Command matches dangerous pattern ${pattern}: "${command}"`;
+    }
+  }
+  return null;
+}
+
+/** Validation error for a registered command */
+export interface CommandValidationError {
+  constraintId: string;
+  error: string;
+}
+
 /** Validate all registered commands before the loop starts. Satisfies: TN5, S3
  *  Returns list of invalid constraints with reasons */
 export function validateRegisteredCommands(
   constraints: EvalConstraint[]
-): { constraintId: string; error: string }[] {
-  const errors: { constraintId: string; error: string }[] = [];
+): CommandValidationError[] {
+  const errors: CommandValidationError[] = [];
 
   for (const c of constraints) {
     // Verify hash integrity
@@ -85,12 +111,10 @@ export function validateRegisteredCommands(
       continue;
     }
 
-    // Basic command safety checks (no shell injections)
-    if (c.command.includes("&&") && c.command.includes("rm ")) {
-      errors.push({
-        constraintId: c.id,
-        error: `Command contains potentially destructive operations: "${c.command}"`,
-      });
+    // Check for dangerous patterns
+    const danger = detectDangerousPatterns(c.command);
+    if (danger) {
+      errors.push({ constraintId: c.id, error: danger });
     }
   }
 

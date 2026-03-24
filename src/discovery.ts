@@ -4,7 +4,7 @@
 // Constraint discovery engine — analyzes codebase and builds evaluation constraints
 
 import { hashCommand } from "./evaluators/custom";
-import type { CodebaseProfile, EvalConstraint } from "./types";
+import type { CodebaseProfile, EvalConstraint, UnhashedConstraint } from "./types";
 
 /** File patterns that indicate language/framework. Satisfies: RT-7 */
 export const INTROSPECTION_RULES: {
@@ -69,8 +69,8 @@ export const TOOL_TO_COMMAND: Record<string, { command: string; mechanism: "stat
 /** Build default constraints from a codebase profile. Satisfies: T4, RT-8 */
 export function buildDefaultConstraints(
   profile: CodebaseProfile
-): Omit<EvalConstraint, "commandHash">[] {
-  const constraints: Omit<EvalConstraint, "commandHash">[] = [];
+): UnhashedConstraint[] {
+  const constraints: UnhashedConstraint[] = [];
   let nextId = 1;
 
   // Add linter constraint if detected
@@ -131,7 +131,7 @@ export function buildDefaultConstraints(
 
 /** Finalize constraints by computing command hashes. Satisfies: TN5 */
 export function finalizeConstraints(
-  constraints: Omit<EvalConstraint, "commandHash">[]
+  constraints: UnhashedConstraint[]
 ): EvalConstraint[] {
   return constraints.map((c) => ({
     ...c,

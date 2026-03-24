@@ -7,6 +7,9 @@ export type NormalizedScore = number;
 /** Evaluation mechanism types. Satisfies: T3 */
 export type EvalMechanism = "static" | "tests" | "llm" | "custom";
 
+/** Known normalizer identifiers for built-in score normalization strategies */
+export type NormalizerId = "eslint" | "tsc" | "pass_rate" | "coverage" | "llm" | "custom";
+
 /** A single evaluation constraint discovered from the user. Satisfies: RT-8 */
 export interface EvalConstraint {
   id: string;
@@ -16,13 +19,16 @@ export interface EvalConstraint {
   command: string;
   /** SHA-256 hash of the command at registration time. Satisfies: TN5 */
   commandHash: string;
-  /** Function to normalize raw command output to 0-100. Satisfies: RT-1 */
-  normalizer: string; // Expression evaluated at runtime, e.g., "parseFloat(output) / maxVal * 100"
+  /** Identifier for the normalization strategy to apply to raw output. Satisfies: RT-1 */
+  normalizer: NormalizerId;
   /** Weight in composite score (0-1, sum to 1 across all constraints) */
   weight: number;
   /** Whether this is an LLM-evaluated constraint. Satisfies: TN2 */
   isLlmEval: boolean;
 }
+
+/** Constraint before command hash is computed. Used during discovery phase */
+export type UnhashedConstraint = Omit<EvalConstraint, "commandHash">;
 
 /** Per-iteration scores snapshot. Satisfies: RT-6 */
 export interface IterationScores {
@@ -123,7 +129,7 @@ export interface CodebaseProfile {
 export interface PresetProfile {
   name: string;
   description: string;
-  constraints: Omit<EvalConstraint, "commandHash">[];
+  constraints: UnhashedConstraint[];
   suggestedTimeBox: number;
   suggestedMaxIterations: number;
 }

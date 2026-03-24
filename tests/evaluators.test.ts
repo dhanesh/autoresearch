@@ -104,7 +104,7 @@ describe("hashCommand / verifyCommandHash", () => {
       mechanism: "custom",
       command: "echo test",
       commandHash: hash,
-      normalizer: "",
+      normalizer: "custom",
       weight: 1,
       isLlmEval: false,
     });
@@ -118,7 +118,7 @@ describe("hashCommand / verifyCommandHash", () => {
       mechanism: "custom",
       command: "echo test",
       commandHash: "wrong",
-      normalizer: "",
+      normalizer: "custom",
       weight: 1,
       isLlmEval: false,
     });

@@ -2,8 +2,8 @@
 // Satisfies: S3 (Command Sandboxing), TN5 (Phase-Lock + Signature Verification)
 // Evaluator for user-provided custom evaluation commands
 
-import { createHash } from "crypto";
-import type { EvalResult, NormalizedScore, EvalConstraint } from "../types";
+import { createHash } from "node:crypto";
+import type { EvalConstraint, EvalResult, NormalizedScore } from "../types";
 
 /** Compute SHA-256 hash of a command string. Satisfies: TN5 */
 export function hashCommand(command: string): string {

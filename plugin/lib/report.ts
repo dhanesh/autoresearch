@@ -2,7 +2,7 @@
 // Satisfies: U3 (Convergence Communication)
 // Summary report generator — produces the final markdown report
 
-import type { LoopState, AutoresearchReport, IterationScores } from "./types";
+import type { AutoresearchReport, LoopState } from "./types";
 
 /** Build the final report from loop state. Satisfies: B3, U1, TN7 */
 export function buildReport(

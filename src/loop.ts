@@ -4,13 +4,11 @@
 // Core loop engine — orchestrates the improve-evaluate-iterate cycle
 
 import type {
-  LoopState,
-  LoopConfig,
-  IterationScores,
-  EvalConstraint,
   EvalResult,
+  IterationScores,
+  LoopConfig,
+  LoopState,
   NormalizedScore,
-  DEFAULTS,
 } from "./types";
 
 /** Initialize a new loop state with baseline scores. Satisfies: RT-2, RT-6, T1 */
@@ -147,9 +145,6 @@ export function processIterationResults(
 
   // Determine keep or revert
   const improved = compositeScore > prevComposite;
-
-  // T5 + TN6: Update plateau counter
-  const belowThreshold = Math.abs(delta) < state.config.convergenceThreshold;
 
   const iterationScores: IterationScores = {
     iteration: state.currentIteration + 1,

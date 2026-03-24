@@ -3,8 +3,8 @@
 // Satisfies: TN1 (Adaptive Eval Selection), TN5 (Command Registration + Hashing)
 // Constraint discovery engine — analyzes codebase and builds evaluation constraints
 
-import type { CodebaseProfile, EvalConstraint, PresetProfile } from "./types";
 import { hashCommand } from "./evaluators/custom";
+import type { CodebaseProfile, EvalConstraint } from "./types";
 
 /** File patterns that indicate language/framework. Satisfies: RT-7 */
 export const INTROSPECTION_RULES: {

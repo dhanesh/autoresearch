@@ -1,0 +1,436 @@
+{
+  "verification": {
+    "timestamp": "2026-03-24T21:41:00-08:00",
+    "result": "SATISFIED",
+    "evidence_summary": {
+      "total": 32,
+      "verified": 32,
+      "failed": 0,
+      "pending": 0
+    },
+    "matrix": [
+      {
+        "constraint": "B1",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-2"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "src/types.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "B2",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-9"
+        ],
+        "artifacts": [
+          "SKILL.md",
+          "src/loop.ts"
+        ]
+      },
+      {
+        "constraint": "B3",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-1",
+          "RT-2"
+        ],
+        "artifacts": [
+          "src/report.ts",
+          "src/types.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "B4",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-3"
+        ],
+        "artifacts": [
+          "src/evaluators/llm.ts"
+        ]
+      },
+      {
+        "constraint": "T1",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-4"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "T2",
+        "type": "boundary",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-5"
+        ],
+        "artifacts": [
+          "src/evaluators/custom.ts",
+          "src/types.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "T3",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-1",
+          "RT-3",
+          "RT-8"
+        ],
+        "artifacts": [
+          "src/evaluators/static.ts",
+          "src/evaluators/tests.ts",
+          "src/evaluators/llm.ts",
+          "src/evaluators/custom.ts",
+          "src/types.ts"
+        ]
+      },
+      {
+        "constraint": "T4",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-7",
+          "RT-8"
+        ],
+        "artifacts": [
+          "src/discovery.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "T5",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-2",
+          "RT-6"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "src/types.ts"
+        ]
+      },
+      {
+        "constraint": "T6",
+        "type": "boundary",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-6"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "src/types.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "U1",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-6",
+          "RT-10"
+        ],
+        "artifacts": [
+          "src/report.ts",
+          "src/loop.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "U2",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-9"
+        ],
+        "artifacts": [
+          "SKILL.md",
+          "src/discovery.ts"
+        ]
+      },
+      {
+        "constraint": "U3",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-10"
+        ],
+        "artifacts": [
+          "src/report.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "U4",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-7",
+          "RT-10"
+        ],
+        "artifacts": [
+          "src/discovery.ts",
+          "profiles/quality.json",
+          "profiles/performance.json",
+          "profiles/coverage.json",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "S1",
+        "type": "boundary",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-4"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "S2",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [],
+        "artifacts": [
+          "SKILL.md",
+          "src/loop.ts"
+        ]
+      },
+      {
+        "constraint": "S3",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-5",
+          "RT-8"
+        ],
+        "artifacts": [
+          "src/evaluators/custom.ts",
+          "src/discovery.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "O1",
+        "type": "boundary",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-6"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "src/types.ts"
+        ]
+      },
+      {
+        "constraint": "O2",
+        "type": "boundary",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-6"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "src/types.ts"
+        ]
+      },
+      {
+        "constraint": "O3",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-1",
+          "RT-6"
+        ],
+        "artifacts": [
+          "src/loop.ts",
+          "SKILL.md"
+        ]
+      },
+      {
+        "constraint": "O4",
+        "type": "boundary",
+        "code": true,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "satisfaction_level": "IMPLEMENTED",
+        "sources": [
+          "RT-5"
+        ],
+        "artifacts": [
+          "src/types.ts",
+          "src/loop.ts"
+        ]
+      }
+    ],
+    "coverage": {
+      "invariants": {
+        "satisfied": 7,
+        "total": 7,
+        "percentage": 100
+      },
+      "goals": {
+        "satisfied": 7,
+        "total": 7,
+        "percentage": 100
+      },
+      "boundaries": {
+        "satisfied": 7,
+        "total": 7,
+        "percentage": 100
+      }
+    },
+    "satisfaction_levels": {
+      "DOCUMENTED": 0,
+      "IMPLEMENTED": 21,
+      "TESTED": 0,
+      "VERIFIED": 0
+    },
+    "traceability": {
+      "constraints_with_code_refs": 21,
+      "constraints_total": 21,
+      "artifact_files_scanned": 13,
+      "constraint_references_found": 85
+    },
+    "gaps": [],
+    "notes": "All 21 constraints are at IMPLEMENTED level (file_exists + content_match evidence verified). No test_passes evidence exists because this is a prompt-based Claude Code skill — the TypeScript modules are reference implementations that guide the LLM, not compiled/tested libraries. TESTED/VERIFIED levels would require unit test suites, which are out of scope for this artifact type."
+  },
+  "file_hashes": {
+    "SKILL.md": "bee4065205a5686e2e3aff639f91af00d3fa8574ae61111ecc11bc5da0ce9c2d",
+    "src/types.ts": "9ff7de887e1bc6e2735485a3b83edd743f09454b0022713c3233f6c8e0552900",
+    "src/loop.ts": "f833ef6d776a8f099a41e598377379bca6e853d886743d002ce27a74125489f4",
+    "src/discovery.ts": "0a707aa31a21afbb5291e856e9da740e5cc39898b8e94ebbdeeb7dc35bf92610",
+    "src/report.ts": "5d392e0b03106ff06241dcbf59034150124e680ace066a879bffb2149c159938",
+    "src/evaluators/static.ts": "947f3abba29930a09d4c36106db059fb838de1578e5f9cd4ff597a6aa6e7d644",
+    "src/evaluators/tests.ts": "4c3be13a077ebaf010fe0f17ec38b83b157dfc55c48d015e127014c8b93215f9",
+    "src/evaluators/llm.ts": "556de679365af099586c9e1e71385e7cf8f11282bc42aa4bc54cd70b698dcb62",
+    "src/evaluators/custom.ts": "4af5aa9e60abbb65948d565630d97ef0ecd7b054c53813150a98a1d99e4e90a6",
+    "src/evaluators/index.ts": "49e45ce2c4460dc8aed499978ff555ba54740767546ee3e466b45d63c4254ed3",
+    "profiles/quality.json": "bf56261c789478b80a1cd03f48f2e88f43757b576d9f414ceda352002a62a9d7",
+    "profiles/performance.json": "2ef6bdaa75aa472ee25d2ac61e5371d024b6988e67a15444fd6a31d1c6bedd79",
+    "profiles/coverage.json": "053f399138c08db6a3dfd2fd9efcd3deb508c32757193d6f502bbbbc891d382a"
+  },
+  "hashes_updated_at": "2026-03-24T16:12:26.595Z"
+}

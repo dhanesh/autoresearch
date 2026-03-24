@@ -1,0 +1,44 @@
+{
+  "name": "quality-focused",
+  "description": "Optimize for code quality: reduce complexity, improve naming, eliminate code smells, strengthen type safety",
+  "constraints": [
+    {
+      "id": "eval-lint",
+      "name": "Lint score",
+      "mechanism": "static",
+      "command": "auto-detect",
+      "normalizer": "eslint",
+      "weight": 0.25,
+      "isLlmEval": false
+    },
+    {
+      "id": "eval-types",
+      "name": "Type check score",
+      "mechanism": "static",
+      "command": "auto-detect",
+      "normalizer": "tsc",
+      "weight": 0.2,
+      "isLlmEval": false
+    },
+    {
+      "id": "eval-tests",
+      "name": "Test pass rate",
+      "mechanism": "tests",
+      "command": "auto-detect",
+      "normalizer": "pass_rate",
+      "weight": 0.25,
+      "isLlmEval": false
+    },
+    {
+      "id": "eval-llm",
+      "name": "LLM code quality rubric",
+      "mechanism": "llm",
+      "command": "llm-eval",
+      "normalizer": "llm",
+      "weight": 0.3,
+      "isLlmEval": true
+    }
+  ],
+  "suggestedTimeBox": 120,
+  "suggestedMaxIterations": 15
+}

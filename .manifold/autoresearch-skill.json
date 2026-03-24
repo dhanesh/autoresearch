@@ -1,0 +1,931 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dhanesh/manifold/main/install/manifold-structure.schema.json",
+  "schema_version": 3,
+  "feature": "autoresearch-skill",
+  "phase": "VERIFIED",
+  "created": "2026-03-24T20:20:06-08:00",
+  "constraints": {
+    "business": [
+      {
+        "id": "B1",
+        "type": "invariant"
+      },
+      {
+        "id": "B2",
+        "type": "goal"
+      },
+      {
+        "id": "B3",
+        "type": "goal"
+      },
+      {
+        "id": "B4",
+        "type": "goal"
+      }
+    ],
+    "technical": [
+      {
+        "id": "T1",
+        "type": "invariant"
+      },
+      {
+        "id": "T2",
+        "type": "boundary"
+      },
+      {
+        "id": "T3",
+        "type": "invariant"
+      },
+      {
+        "id": "T4",
+        "type": "goal"
+      },
+      {
+        "id": "T5",
+        "type": "goal"
+      },
+      {
+        "id": "T6",
+        "type": "boundary"
+      }
+    ],
+    "user_experience": [
+      {
+        "id": "U1",
+        "type": "goal"
+      },
+      {
+        "id": "U2",
+        "type": "invariant"
+      },
+      {
+        "id": "U3",
+        "type": "goal"
+      },
+      {
+        "id": "U4",
+        "type": "goal"
+      }
+    ],
+    "security": [
+      {
+        "id": "S1",
+        "type": "boundary"
+      },
+      {
+        "id": "S2",
+        "type": "invariant"
+      },
+      {
+        "id": "S3",
+        "type": "invariant"
+      }
+    ],
+    "operational": [
+      {
+        "id": "O1",
+        "type": "boundary"
+      },
+      {
+        "id": "O2",
+        "type": "boundary"
+      },
+      {
+        "id": "O3",
+        "type": "invariant"
+      },
+      {
+        "id": "O4",
+        "type": "boundary"
+      }
+    ]
+  },
+  "tensions": [
+    {
+      "id": "TN1",
+      "type": "resource_tension",
+      "between": [
+        "T3",
+        "T2"
+      ],
+      "status": "resolved",
+      "resolution": "Adaptive eval selection: measure mechanism durations during discovery, include only those fitting the time box, prioritize by user preference",
+      "decision": "A",
+      "validation_criteria": [
+        "Eval mechanism timing is measured during constraint discovery",
+        "Mechanisms exceeding time box are excluded with user notification",
+        "Total eval time stays within time box allocation"
+      ]
+    },
+    {
+      "id": "TN2",
+      "type": "resource_tension",
+      "between": [
+        "T3",
+        "O2"
+      ],
+      "status": "resolved",
+      "resolution": "Sampling strategy: full LLM eval every 3rd iteration, lightweight static metrics for others. ~60% token cost reduction",
+      "decision": "B",
+      "validation_criteria": [
+        "LLM eval runs only on every 3rd iteration during the loop",
+        "Static metrics run on every iteration",
+        "Token tracking shows eval tokens within 30% of total budget"
+      ]
+    },
+    {
+      "id": "TN3",
+      "type": "trade_off",
+      "between": [
+        "S2",
+        "B2"
+      ],
+      "status": "resolved",
+      "resolution": "Scope expansion proposals: loop can READ any file but only WRITE within scope. Out-of-scope improvements are logged as proposals in the report",
+      "decision": "B",
+      "validation_criteria": [
+        "Write operations are blocked for out-of-scope files",
+        "Read operations work for any project file",
+        "Out-of-scope proposals appear in the summary report"
+      ]
+    },
+    {
+      "id": "TN4",
+      "type": "trade_off",
+      "between": [
+        "T6",
+        "O3"
+      ],
+      "status": "resolved",
+      "resolution": "Retry before trip: when regression >10% detected, re-run that evaluation sequentially before triggering circuit breaker. Only trip on confirmed regression",
+      "decision": "A",
+      "validation_criteria": [
+        "Circuit breaker does not trip on first regression detection",
+        "Sequential retry runs for the specific failing metric",
+        "Circuit breaker trips only after retry confirms regression"
+      ]
+    },
+    {
+      "id": "TN5",
+      "type": "trade_off",
+      "between": [
+        "S3",
+        "T3"
+      ],
+      "status": "resolved",
+      "resolution": "Phase-locked execution AND command signature verification: commands registered and hashed at discovery, only executable during eval phase, hash verified before each run",
+      "decision": "C",
+      "validation_criteria": [
+        "Commands can only run during evaluation phase",
+        "LLM cannot invoke unregistered commands",
+        "Command hash is verified before each execution",
+        "Modified commands are rejected with an error"
+      ]
+    },
+    {
+      "id": "TN6",
+      "type": "trade_off",
+      "between": [
+        "T5",
+        "B2"
+      ],
+      "status": "resolved",
+      "resolution": "Plateau window: require 3 consecutive below-threshold iterations before auto-stop. Single dips followed by recovery do not trigger stop",
+      "decision": "A",
+      "validation_criteria": [
+        "Loop continues after a single below-threshold iteration",
+        "Loop continues after 2 consecutive below-threshold iterations",
+        "Loop stops after 3 consecutive below-threshold iterations"
+      ]
+    },
+    {
+      "id": "TN7",
+      "type": "trade_off",
+      "between": [
+        "B3",
+        "B2"
+      ],
+      "status": "resolved",
+      "resolution": "Learning-focused summary: final report always includes a full (non-sampled) LLM evaluation with explanations of WHY each change was made, regardless of sampling strategy during the loop",
+      "decision": "A",
+      "validation_criteria": [
+        "Final summary report includes full LLM evaluation",
+        "Each change includes rationale explaining WHY",
+        "Report is generated even if loop auto-stops"
+      ]
+    }
+  ],
+  "anchors": {
+    "required_truths": [
+      {
+        "id": "RT-1",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T3",
+          "B3",
+          "O3"
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/evaluators/static.ts",
+            "status": "VERIFIED",
+            "id": "EV-1"
+          },
+          {
+            "type": "file_exists",
+            "path": "src/evaluators/tests.ts",
+            "status": "VERIFIED",
+            "id": "EV-2"
+          },
+          {
+            "type": "file_exists",
+            "path": "src/evaluators/custom.ts",
+            "status": "VERIFIED",
+            "id": "EV-3"
+          },
+          {
+            "type": "content_match",
+            "path": "src/evaluators/static.ts",
+            "pattern": "NormalizedScore",
+            "status": "VERIFIED",
+            "id": "EV-4"
+          },
+          {
+            "type": "content_match",
+            "path": "src/types.ts",
+            "pattern": "type NormalizedScore = number",
+            "status": "VERIFIED",
+            "id": "EV-5"
+          }
+        ]
+      },
+      {
+        "id": "RT-2",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B1",
+          "B3",
+          "T5"
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "src/loop.ts",
+            "pattern": "initLoopState",
+            "status": "VERIFIED",
+            "id": "EV-6"
+          },
+          {
+            "type": "content_match",
+            "path": "src/types.ts",
+            "pattern": "baseline: IterationScores",
+            "status": "VERIFIED",
+            "id": "EV-7"
+          },
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "Baseline Capture",
+            "status": "VERIFIED",
+            "id": "EV-8"
+          }
+        ]
+      },
+      {
+        "id": "RT-3",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T3",
+          "B4"
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/evaluators/llm.ts",
+            "status": "VERIFIED",
+            "id": "EV-9"
+          },
+          {
+            "type": "content_match",
+            "path": "src/evaluators/llm.ts",
+            "pattern": "LLM_RUBRIC_DIMENSIONS",
+            "status": "VERIFIED",
+            "id": "EV-10"
+          }
+        ]
+      },
+      {
+        "id": "RT-4",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T1",
+          "S1"
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "src/loop.ts",
+            "pattern": "generateBranchName",
+            "status": "VERIFIED",
+            "id": "EV-11"
+          },
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "NEVER force-push",
+            "status": "VERIFIED",
+            "id": "EV-12"
+          }
+        ]
+      },
+      {
+        "id": "RT-5",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T2",
+          "O4",
+          "S3"
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "src/evaluators/custom.ts",
+            "pattern": "wrapWithTimeout",
+            "status": "VERIFIED",
+            "id": "EV-13"
+          },
+          {
+            "type": "content_match",
+            "path": "src/types.ts",
+            "pattern": "commandTimeoutSeconds",
+            "status": "VERIFIED",
+            "id": "EV-14"
+          }
+        ]
+      },
+      {
+        "id": "RT-6",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T5",
+          "O1",
+          "O2",
+          "O3",
+          "U1"
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/loop.ts",
+            "status": "VERIFIED",
+            "id": "EV-15"
+          },
+          {
+            "type": "content_match",
+            "path": "src/loop.ts",
+            "pattern": "shouldStop",
+            "status": "VERIFIED",
+            "id": "EV-16"
+          },
+          {
+            "type": "content_match",
+            "path": "src/loop.ts",
+            "pattern": "processIterationResults",
+            "status": "VERIFIED",
+            "id": "EV-17"
+          },
+          {
+            "type": "content_match",
+            "path": "src/loop.ts",
+            "pattern": "updateState",
+            "status": "VERIFIED",
+            "id": "EV-18"
+          },
+          {
+            "type": "content_match",
+            "path": "src/types.ts",
+            "pattern": "interface LoopState",
+            "status": "VERIFIED",
+            "id": "EV-19"
+          }
+        ]
+      },
+      {
+        "id": "RT-7",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T4",
+          "U4"
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/discovery.ts",
+            "status": "VERIFIED",
+            "id": "EV-20"
+          },
+          {
+            "type": "content_match",
+            "path": "src/discovery.ts",
+            "pattern": "INTROSPECTION_RULES",
+            "status": "VERIFIED",
+            "id": "EV-21"
+          },
+          {
+            "type": "content_match",
+            "path": "src/types.ts",
+            "pattern": "interface CodebaseProfile",
+            "status": "VERIFIED",
+            "id": "EV-22"
+          }
+        ]
+      },
+      {
+        "id": "RT-8",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T3",
+          "T4",
+          "S3"
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "src/discovery.ts",
+            "pattern": "TOOL_TO_COMMAND",
+            "status": "VERIFIED",
+            "id": "EV-23"
+          },
+          {
+            "type": "content_match",
+            "path": "src/discovery.ts",
+            "pattern": "buildDefaultConstraints",
+            "status": "VERIFIED",
+            "id": "EV-24"
+          },
+          {
+            "type": "content_match",
+            "path": "src/discovery.ts",
+            "pattern": "finalizeConstraints",
+            "status": "VERIFIED",
+            "id": "EV-25"
+          }
+        ]
+      },
+      {
+        "id": "RT-9",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B2",
+          "U2"
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "SKILL.md",
+            "status": "VERIFIED",
+            "id": "EV-26"
+          },
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "name: autoresearch",
+            "status": "VERIFIED",
+            "id": "EV-27"
+          },
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "AskUserQuestion",
+            "status": "VERIFIED",
+            "id": "EV-28"
+          }
+        ]
+      },
+      {
+        "id": "RT-10",
+        "status": "SATISFIED",
+        "maps_to": [
+          "U1",
+          "U3",
+          "U4"
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "--profile",
+            "status": "VERIFIED",
+            "id": "EV-29"
+          },
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "--max-iterations",
+            "status": "VERIFIED",
+            "id": "EV-30"
+          },
+          {
+            "type": "content_match",
+            "path": "SKILL.md",
+            "pattern": "--resume",
+            "status": "VERIFIED",
+            "id": "EV-31"
+          },
+          {
+            "type": "file_exists",
+            "path": "profiles/quality.json",
+            "status": "VERIFIED",
+            "id": "EV-32"
+          }
+        ]
+      }
+    ],
+    "recommended_option": "A"
+  },
+  "generation": {
+    "option": "A",
+    "timestamp": "2026-03-24T20:55:00-08:00",
+    "artifacts": [
+      {
+        "path": "SKILL.md",
+        "type": "code",
+        "satisfies": [
+          "RT-9",
+          "RT-10",
+          "B2",
+          "U2"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/types.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1",
+          "RT-6"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/loop.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-2",
+          "RT-4",
+          "RT-6"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/discovery.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-7",
+          "RT-8"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/report.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-6",
+          "B3",
+          "U1"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/static.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1",
+          "RT-8"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/tests.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1",
+          "RT-8"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/llm.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1",
+          "RT-3"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/custom.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1",
+          "RT-5",
+          "RT-8"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/index.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1"
+        ],
+        "status": "generated",
+        "artifact_class": "structural"
+      },
+      {
+        "path": "profiles/quality.json",
+        "type": "config",
+        "satisfies": [
+          "RT-10",
+          "U4"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "profiles/performance.json",
+        "type": "config",
+        "satisfies": [
+          "RT-10",
+          "U4"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "profiles/coverage.json",
+        "type": "config",
+        "satisfies": [
+          "RT-10",
+          "U4"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      }
+    ],
+    "coverage": {
+      "constraints_addressed": 17,
+      "constraints_total": 17,
+      "percentage": 100
+    }
+  },
+  "iterations": [
+    {
+      "number": 1,
+      "phase": "constrain",
+      "timestamp": "2026-03-24T20:25:00-08:00",
+      "constraints_added": 17,
+      "result": "17 constraints discovered across 5 categories via interactive interview",
+      "by_category": {
+        "business": 4,
+        "technical": 6,
+        "user_experience": 4,
+        "security": 3,
+        "operational": 4
+      }
+    },
+    {
+      "number": 2,
+      "phase": "tension",
+      "timestamp": "2026-03-24T20:35:00-08:00",
+      "result": "7 tensions identified and resolved via interactive interview",
+      "tensions_found": 7,
+      "tensions_resolved": 7,
+      "by_type": {
+        "trade_offs": 5,
+        "resource_tensions": 2,
+        "hidden_dependencies": 0
+      }
+    },
+    {
+      "number": 3,
+      "phase": "anchor",
+      "timestamp": "2026-03-24T20:45:00-08:00",
+      "result": "10 required truths derived via backward reasoning, architecture Option A selected",
+      "required_truths": 10,
+      "by_status": {
+        "SATISFIED": 0,
+        "PARTIAL": 0,
+        "NOT_SATISFIED": 10,
+        "SPECIFICATION_READY": 0
+      },
+      "solution_options": 1,
+      "selected_option": "A: Single-File Skill with modular TypeScript"
+    },
+    {
+      "number": 4,
+      "phase": "generate",
+      "timestamp": "2026-03-24T20:55:00-08:00",
+      "result": "13 artifacts generated (10 substantive, 1 structural, 2 config profiles) covering 100% of constraints"
+    },
+    {
+      "number": 5,
+      "phase": "verify",
+      "timestamp": "2026-03-24T16:12:15.515Z",
+      "result": "32/32 evidence items verified. 21/21 constraints satisfied at IMPLEMENTED level. 85 constraint references traced across 13 artifacts. 0 gaps.",
+      "evidence_verified": 32,
+      "evidence_total": 32,
+      "constraints_satisfied": 21,
+      "constraints_total": 21
+    }
+  ],
+  "convergence": {
+    "status": "CONVERGED"
+  },
+  "constraint_graph": {
+    "version": 1,
+    "nodes": {
+      "B1": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "B2": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "B3": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "B4": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "T1": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T2": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T3": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T4": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T5": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T6": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "U1": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "U2": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "U3": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "U4": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "S1": {
+        "type": "constraint",
+        "category": "security"
+      },
+      "S2": {
+        "type": "constraint",
+        "category": "security"
+      },
+      "S3": {
+        "type": "constraint",
+        "category": "security"
+      },
+      "O1": {
+        "type": "constraint",
+        "category": "operational"
+      },
+      "O2": {
+        "type": "constraint",
+        "category": "operational"
+      },
+      "O3": {
+        "type": "constraint",
+        "category": "operational"
+      },
+      "O4": {
+        "type": "constraint",
+        "category": "operational"
+      }
+    },
+    "edges": {
+      "dependencies": [
+        {
+          "from": "T1",
+          "to": "S2",
+          "reason": "git safety enables safe iteration"
+        },
+        {
+          "from": "U2",
+          "to": "T4",
+          "reason": "constraint discovery requires codebase analysis"
+        },
+        {
+          "from": "O3",
+          "to": "T3",
+          "reason": "circuit breaker depends on multi-metric evaluation"
+        },
+        {
+          "from": "T5",
+          "to": "O1",
+          "reason": "diminishing returns detection respects iteration cap"
+        }
+      ],
+      "conflicts": [
+        {
+          "between": [
+            "T3",
+            "T2"
+          ],
+          "tension": "TN1"
+        },
+        {
+          "between": [
+            "T3",
+            "O2"
+          ],
+          "tension": "TN2"
+        },
+        {
+          "between": [
+            "S2",
+            "B2"
+          ],
+          "tension": "TN3"
+        },
+        {
+          "between": [
+            "T6",
+            "O3"
+          ],
+          "tension": "TN4"
+        },
+        {
+          "between": [
+            "S3",
+            "T3"
+          ],
+          "tension": "TN5"
+        },
+        {
+          "between": [
+            "T5",
+            "B2"
+          ],
+          "tension": "TN6"
+        },
+        {
+          "between": [
+            "B3",
+            "B2"
+          ],
+          "tension": "TN7"
+        }
+      ],
+      "satisfies": [
+        {
+          "from": "T4",
+          "to": "B2",
+          "reason": "multi-metric scoring prevents gaming"
+        },
+        {
+          "from": "O3",
+          "to": "B1",
+          "reason": "circuit breaker protects codebase integrity"
+        }
+      ]
+    }
+  }
+}

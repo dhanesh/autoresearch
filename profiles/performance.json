@@ -1,0 +1,44 @@
+{
+  "name": "perf-focused",
+  "description": "Optimize for performance: reduce bundle size, improve algorithmic complexity, optimize hot paths",
+  "constraints": [
+    {
+      "id": "eval-lint",
+      "name": "Lint score",
+      "mechanism": "static",
+      "command": "auto-detect",
+      "normalizer": "eslint",
+      "weight": 0.15,
+      "isLlmEval": false
+    },
+    {
+      "id": "eval-tests",
+      "name": "Test pass rate",
+      "mechanism": "tests",
+      "command": "auto-detect",
+      "normalizer": "pass_rate",
+      "weight": 0.2,
+      "isLlmEval": false
+    },
+    {
+      "id": "eval-benchmark",
+      "name": "Performance benchmark",
+      "mechanism": "custom",
+      "command": "auto-detect",
+      "normalizer": "custom",
+      "weight": 0.35,
+      "isLlmEval": false
+    },
+    {
+      "id": "eval-llm",
+      "name": "LLM performance review",
+      "mechanism": "llm",
+      "command": "llm-eval",
+      "normalizer": "llm",
+      "weight": 0.3,
+      "isLlmEval": true
+    }
+  ],
+  "suggestedTimeBox": 180,
+  "suggestedMaxIterations": 20
+}

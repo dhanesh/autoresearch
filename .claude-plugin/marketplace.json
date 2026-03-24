@@ -10,10 +10,7 @@
   "plugins": [
     {
       "name": "autoresearch",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/dhanesh/autoresearch.git"
-      },
+      "source": "./plugin",
       "description": "Iteratively improves code quality, test coverage, performance, and architecture using multi-metric evaluation with diminishing returns detection."
     }
   ]

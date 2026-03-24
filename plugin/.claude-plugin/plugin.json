@@ -1,0 +1,9 @@
+{
+  "name": "autoresearch",
+  "description": "Autonomous codebase improvement loop inspired by Karpathy's autoresearch. Iteratively improves code quality, test coverage, performance, and architecture using multi-metric evaluation with diminishing returns detection.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Dhanesh",
+    "url": "https://github.com/dhanesh/autoresearch"
+  }
+}

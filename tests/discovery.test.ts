@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildDefaultConstraints,
   finalizeConstraints,
+  INTROSPECTION_RULES,
   rebalanceWeights,
   TOOL_TO_COMMAND,
 } from "../src/discovery";
@@ -80,6 +81,44 @@ describe("rebalanceWeights", () => {
   it("should handle empty constraints", () => {
     const rebalanced = rebalanceWeights([]);
     expect(rebalanced).toEqual([]);
+  });
+
+  it("should return unchanged when all weights are zero", () => {
+    const constraints = finalizeConstraints(
+      buildDefaultConstraints(makeProfile({ linter: "eslint" }))
+    ).map((c) => ({ ...c, weight: 0 }));
+    const rebalanced = rebalanceWeights(constraints);
+    // All weights zero — returned as-is (no division by zero)
+    expect(rebalanced.every((c) => c.weight === 0)).toBe(true);
+  });
+
+  it("should preserve relative proportions", () => {
+    const constraints = finalizeConstraints(
+      buildDefaultConstraints(makeProfile({ linter: "eslint", testRunner: "vitest" }))
+    );
+    const origRatios = constraints.map((c) => c.weight);
+    const rebalanced = rebalanceWeights(constraints);
+    // Ratios between first two should remain the same
+    const origRatio = origRatios[0] / origRatios[1];
+    const newRatio = rebalanced[0].weight / rebalanced[1].weight;
+    expect(newRatio).toBeCloseTo(origRatio, 5);
+  });
+});
+
+describe("INTROSPECTION_RULES", () => {
+  it("should have unique patterns", () => {
+    const patterns = INTROSPECTION_RULES.map((r) => r.pattern);
+    expect(new Set(patterns).size).toBe(patterns.length);
+  });
+
+  it("should cover multiple language ecosystems", () => {
+    const languages = new Set(
+      INTROSPECTION_RULES.filter((r) => r.indicates.language).map((r) => r.indicates.language)
+    );
+    expect(languages.size).toBeGreaterThanOrEqual(3);
+    expect(languages.has("typescript")).toBe(true);
+    expect(languages.has("python")).toBe(true);
+    expect(languages.has("rust")).toBe(true);
   });
 });
 

@@ -3,6 +3,7 @@ import {
   buildCustomResult,
   buildStaticResult,
   buildTestResult,
+  formatError,
   hashCommand,
   normalizeComplexityOutput,
   normalizeCustomOutput,
@@ -177,5 +178,22 @@ describe("buildCustomResult", () => {
     expect(result.success).toBe(false);
     expect(result.normalizedScore).toBe(0);
     expect(result.error).toContain("timed out");
+  });
+});
+
+describe("formatError", () => {
+  it("should extract message from Error instances", () => {
+    expect(formatError(new Error("test error"))).toBe("test error");
+  });
+
+  it("should convert non-Error values to string", () => {
+    expect(formatError("raw string")).toBe("raw string");
+    expect(formatError(42)).toBe("42");
+    expect(formatError(null)).toBe("null");
+  });
+
+  it("should handle TypeError and other Error subclasses", () => {
+    expect(formatError(new TypeError("type issue"))).toBe("type issue");
+    expect(formatError(new RangeError("out of range"))).toBe("out of range");
   });
 });

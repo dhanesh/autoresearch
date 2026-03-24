@@ -73,12 +73,21 @@ Respond ONLY with valid JSON:
 }`;
 }
 
-/** Parse LLM evaluation JSON response and extract normalized composite score */
-export function parseLlmEvalResponse(raw: string): {
+/** Score and justification for a single rubric dimension */
+export interface DimensionScore {
+  score: number;
+  justification: string;
+}
+
+/** Parsed result from an LLM quality evaluation */
+export interface LlmEvalParsedResult {
   score: NormalizedScore;
-  details: Record<string, { score: number; justification: string }>;
+  details: Record<string, DimensionScore>;
   learning?: string;
-} {
+}
+
+/** Parse LLM evaluation JSON response and extract normalized composite score */
+export function parseLlmEvalResponse(raw: string): LlmEvalParsedResult {
   try {
     // Extract JSON from response (may be wrapped in markdown code block)
     const jsonMatch = raw.match(/\{[\s\S]*\}/);

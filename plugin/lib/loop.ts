@@ -48,12 +48,15 @@ export function initLoopState(
   };
 }
 
-/** Check if the loop should continue. Satisfies: O1, O2, O4, T5, TN6
- *  Returns null if should continue, or stop reason if should stop */
-export function shouldStop(state: LoopState): {
+/** Describes why the loop should stop */
+export interface StopCondition {
   reason: LoopState["stopReason"];
   details: string;
-} | null {
+}
+
+/** Check if the loop should continue. Satisfies: O1, O2, O4, T5, TN6
+ *  Returns null if should continue, or stop reason if should stop */
+export function shouldStop(state: LoopState): StopCondition | null {
   // O1: Max iterations cap
   if (state.currentIteration >= state.config.maxIterations) {
     return {
@@ -98,11 +101,20 @@ export interface IterationProcessResult {
   regressionDetails?: string;
 }
 
-/** Build the score map and weighted composite from evaluation results */
-function computeComposite(results: EvalResult[]): {
+/** Aggregated scores and weighted composite from a set of evaluation results */
+interface CompositeResult {
   scores: Record<string, NormalizedScore>;
   compositeScore: NormalizedScore;
-} {
+}
+
+/** A detected regression in a single constraint */
+interface RegressionInfo {
+  constraintId: string;
+  regressionPct: number;
+}
+
+/** Build the score map and weighted composite from evaluation results */
+function computeComposite(results: EvalResult[]): CompositeResult {
   const scores: Record<string, NormalizedScore> = {};
   for (const r of results) {
     scores[r.constraintId] = r.normalizedScore;
@@ -121,7 +133,7 @@ function computeComposite(results: EvalResult[]): {
 function checkCircuitBreaker(
   scores: Record<string, NormalizedScore>,
   state: LoopState
-): { constraintId: string; regressionPct: number } | null {
+): RegressionInfo | null {
   for (const [constraintId, score] of Object.entries(scores)) {
     const best = state.bestScores[constraintId] ?? state.baseline.scores[constraintId] ?? 0;
     if (best > 0) {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  LLM_RUBRIC_DIMENSIONS,
   buildLlmEvalPrompt,
   buildLlmResult,
+  LLM_RUBRIC_DIMENSIONS,
   parseLlmEvalResponse,
   shouldRunLlmEval,
 } from "../src/evaluators/llm";

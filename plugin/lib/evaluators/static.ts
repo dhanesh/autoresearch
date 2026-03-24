@@ -6,18 +6,16 @@ import type { EvalResult, NormalizedScore } from "../types";
 /** Parse ESLint JSON output and normalize to 0-100 score (100 = no issues) */
 export function normalizeEslintOutput(raw: string): NormalizedScore {
   try {
-    const results = JSON.parse(raw);
-    const totalErrors = results.reduce(
-      (sum: number, r: { errorCount: number }) => sum + r.errorCount,
-      0
-    );
-    const totalWarnings = results.reduce(
-      (sum: number, r: { warningCount: number }) => sum + r.warningCount,
-      0
-    );
+    const results: { errorCount: number; warningCount: number }[] = JSON.parse(raw);
+    let totalErrors = 0;
+    let totalWarnings = 0;
+    for (const r of results) {
+      totalErrors += r.errorCount;
+      totalWarnings += r.warningCount;
+    }
     // Score: 100 minus weighted penalties (errors=2pts, warnings=0.5pts), floor at 0
     const penalty = totalErrors * 2 + totalWarnings * 0.5;
-    return Math.max(0, Math.min(100, 100 - penalty));
+    return Math.max(0, Math.min(100, Math.round(100 - penalty)));
   } catch {
     return 0;
   }

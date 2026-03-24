@@ -2,6 +2,12 @@
 // Evaluator for test suites: pass rate and coverage
 
 import type { EvalResult, NormalizedScore } from "../types";
+import { formatError } from "./custom";
+
+/** Calculate pass rate as a 0-100 score, returning 0 if total is zero */
+function passRate(passed: number, total: number): NormalizedScore {
+  return total > 0 ? Math.round((passed / total) * 100) : 0;
+}
 
 /** Parse test runner output for pass/fail counts and normalize.
  *  Supports common formats: Jest, Vitest, bun test, pytest */
@@ -11,9 +17,7 @@ export function normalizeTestPassRate(raw: string): NormalizedScore {
     /(\d+)\s+passed.*?(\d+)\s+failed.*?(\d+)\s+total/i
   );
   if (jestMatch) {
-    const passed = parseInt(jestMatch[1], 10);
-    const total = parseInt(jestMatch[3], 10);
-    return total > 0 ? Math.round((passed / total) * 100) : 0;
+    return passRate(parseInt(jestMatch[1], 10), parseInt(jestMatch[3], 10));
   }
 
   // Try pytest format: "X passed, Y failed"
@@ -22,16 +26,13 @@ export function normalizeTestPassRate(raw: string): NormalizedScore {
   if (pytestMatch) {
     const passed = parseInt(pytestMatch[1], 10);
     const failed = pytestFailed ? parseInt(pytestFailed[1], 10) : 0;
-    const total = passed + failed;
-    return total > 0 ? Math.round((passed / total) * 100) : 0;
+    return passRate(passed, passed + failed);
   }
 
   // Try generic "X/Y" format
   const ratioMatch = raw.match(/(\d+)\s*\/\s*(\d+)/);
   if (ratioMatch) {
-    const passed = parseInt(ratioMatch[1], 10);
-    const total = parseInt(ratioMatch[2], 10);
-    return total > 0 ? Math.round((passed / total) * 100) : 0;
+    return passRate(parseInt(ratioMatch[1], 10), parseInt(ratioMatch[2], 10));
   }
 
   // If all tests pass with no failures mentioned
@@ -104,7 +105,7 @@ export function buildTestResult(
       normalizedScore: 0,
       durationMs,
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: formatError(error),
     };
   }
 }

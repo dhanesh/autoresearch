@@ -2,8 +2,19 @@
 // Satisfies: S3 (Command Sandboxing), TN5 (Phase-Lock + Signature Verification)
 // Evaluator for user-provided custom evaluation commands
 
-import { createHash } from "crypto";
-import type { EvalResult, NormalizedScore, EvalConstraint } from "../types";
+import { createHash } from "node:crypto";
+import type { EvalConstraint, EvalResult, NormalizedScore } from "../types";
+
+/** Result of a command hash verification check */
+export interface VerificationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/** Format an unknown error value into a message string */
+export function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 /** Compute SHA-256 hash of a command string. Satisfies: TN5 */
 export function hashCommand(command: string): string {
@@ -13,7 +24,7 @@ export function hashCommand(command: string): string {
 /** Verify command hash hasn't been tampered with. Satisfies: TN5 */
 export function verifyCommandHash(
   constraint: EvalConstraint
-): { valid: boolean; error?: string } {
+): VerificationResult {
   const currentHash = hashCommand(constraint.command);
   if (currentHash !== constraint.commandHash) {
     return {
@@ -70,27 +81,51 @@ function clampScore(value: number): NormalizedScore {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+/** Patterns that indicate potentially destructive shell operations. Satisfies: S3 */
+const DANGEROUS_PATTERNS = [
+  /\brm\s+-[rR]f?\b/, // recursive delete
+  /\brm\s+.*\*/, // wildcard delete
+  /\bchmod\s+777\b/, // world-writable permissions
+  /\bcurl\b.*\|\s*\bsh\b/, // pipe-to-shell
+  /\beval\b/, // eval injection vector
+  /\b>\s*\/dev\/sd[a-z]/, // device overwrites
+] as const;
+
+/** Check a command string for dangerous patterns. Satisfies: S3 */
+function detectDangerousPatterns(command: string): string | null {
+  for (const pattern of DANGEROUS_PATTERNS) {
+    if (pattern.test(command)) {
+      return `Command matches dangerous pattern ${pattern}: "${command}"`;
+    }
+  }
+  return null;
+}
+
+/** Validation error for a registered command */
+export interface CommandValidationError {
+  constraintId: string;
+  error: string;
+}
+
 /** Validate all registered commands before the loop starts. Satisfies: TN5, S3
  *  Returns list of invalid constraints with reasons */
 export function validateRegisteredCommands(
   constraints: EvalConstraint[]
-): { constraintId: string; error: string }[] {
-  const errors: { constraintId: string; error: string }[] = [];
+): CommandValidationError[] {
+  const errors: CommandValidationError[] = [];
 
   for (const c of constraints) {
     // Verify hash integrity
     const hashCheck = verifyCommandHash(c);
     if (!hashCheck.valid) {
-      errors.push({ constraintId: c.id, error: hashCheck.error! });
+      errors.push({ constraintId: c.id, error: hashCheck.error ?? "Unknown hash verification error" });
       continue;
     }
 
-    // Basic command safety checks (no shell injections)
-    if (c.command.includes("&&") && c.command.includes("rm ")) {
-      errors.push({
-        constraintId: c.id,
-        error: `Command contains potentially destructive operations: "${c.command}"`,
-      });
+    // Check for dangerous patterns
+    const danger = detectDangerousPatterns(c.command);
+    if (danger) {
+      errors.push({ constraintId: c.id, error: danger });
     }
   }
 
@@ -134,7 +169,7 @@ export function buildCustomResult(
       normalizedScore: 0,
       durationMs,
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: formatError(error),
     };
   }
 }

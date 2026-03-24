@@ -2,7 +2,12 @@
 // Satisfies: U3 (Convergence Communication)
 // Summary report generator — produces the final markdown report
 
-import type { LoopState, AutoresearchReport, IterationScores } from "./types";
+import type { AutoresearchReport, IterationScores, LoopState } from "./types";
+
+/** Get the most recent iteration from state, or undefined if none exist */
+function lastIteration(state: LoopState): IterationScores | undefined {
+  return state.iterations[state.iterations.length - 1];
+}
 
 /** Build the final report from loop state. Satisfies: B3, U1, TN7 */
 export function buildReport(
@@ -10,10 +15,8 @@ export function buildReport(
   learningReport?: string
 ): AutoresearchReport {
   const improvement: Record<string, number> = {};
-  const finalScores =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].scores
-      : state.baseline.scores;
+  const latest = lastIteration(state);
+  const finalScores = latest?.scores ?? state.baseline.scores;
 
   for (const [id, baselineScore] of Object.entries(state.baseline.scores)) {
     const finalScore = finalScores[id] ?? baselineScore;
@@ -25,10 +28,7 @@ export function buildReport(
   }
 
   const baselineComposite = state.baseline.compositeScore;
-  const finalComposite =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].compositeScore
-      : baselineComposite;
+  const finalComposite = latest?.compositeScore ?? baselineComposite;
   const compositeImprovement =
     baselineComposite > 0
       ? ((finalComposite - baselineComposite) / baselineComposite) * 100
@@ -51,27 +51,32 @@ export function buildReport(
   };
 }
 
-/** Render report as markdown. Satisfies: U1, B3 */
-export function renderReportMarkdown(report: AutoresearchReport): string {
-  const lines: string[] = [];
+/** Render the metadata header section */
+function renderMetadata(report: AutoresearchReport): string[] {
+  const sign = report.compositeImprovement >= 0 ? "+" : "";
+  return [
+    `# Autoresearch Report: ${report.runId}`,
+    "",
+    "| Field | Value |",
+    "|-------|-------|",
+    `| **Scope** | ${report.scope.join(", ")} |`,
+    `| **Started** | ${report.startedAt} |`,
+    `| **Completed** | ${report.completedAt} |`,
+    `| **Iterations** | ${report.totalIterations} |`,
+    `| **Stop Reason** | ${report.stopReason} |`,
+    `| **Composite Improvement** | ${sign}${report.compositeImprovement.toFixed(1)}% |`,
+    "",
+  ];
+}
 
-  lines.push(`# Autoresearch Report: ${report.runId}`);
-  lines.push("");
-  lines.push(`| Field | Value |`);
-  lines.push(`|-------|-------|`);
-  lines.push(`| **Scope** | ${report.scope.join(", ")} |`);
-  lines.push(`| **Started** | ${report.startedAt} |`);
-  lines.push(`| **Completed** | ${report.completedAt} |`);
-  lines.push(`| **Iterations** | ${report.totalIterations} |`);
-  lines.push(`| **Stop Reason** | ${report.stopReason} |`);
-  lines.push(`| **Composite Improvement** | ${report.compositeImprovement >= 0 ? "+" : ""}${report.compositeImprovement.toFixed(1)}% |`);
-  lines.push("");
-
-  // Per-constraint improvements
-  lines.push("## Improvement Summary");
-  lines.push("");
-  lines.push("| Constraint | Baseline | Final | Change |");
-  lines.push("|------------|----------|-------|--------|");
+/** Render the per-constraint improvement table */
+function renderImprovementTable(report: AutoresearchReport): string[] {
+  const lines = [
+    "## Improvement Summary",
+    "",
+    "| Constraint | Baseline | Final | Change |",
+    "|------------|----------|-------|--------|",
+  ];
   for (const [id, pct] of Object.entries(report.improvement)) {
     const baseline = report.baseline[id] ?? 0;
     const final = report.final[id] ?? 0;
@@ -79,12 +84,17 @@ export function renderReportMarkdown(report: AutoresearchReport): string {
     lines.push(`| ${id} | ${baseline} | ${final} | ${sign}${pct.toFixed(1)}% |`);
   }
   lines.push("");
+  return lines;
+}
 
-  // Iteration history
-  lines.push("## Iteration History");
-  lines.push("");
-  lines.push("| # | Score | Delta | Status | Tokens | Duration |");
-  lines.push("|---|-------|-------|--------|--------|----------|");
+/** Render the iteration history table */
+function renderIterationHistory(report: AutoresearchReport): string[] {
+  const lines = [
+    "## Iteration History",
+    "",
+    "| # | Score | Delta | Status | Tokens | Duration |",
+    "|---|-------|-------|--------|--------|----------|",
+  ];
   for (const iter of report.iterationHistory) {
     const delta = iter.delta >= 0 ? `+${iter.delta.toFixed(1)}` : iter.delta.toFixed(1);
     lines.push(
@@ -92,70 +102,64 @@ export function renderReportMarkdown(report: AutoresearchReport): string {
     );
   }
   lines.push("");
+  return lines;
+}
+
+/** Render report as markdown. Satisfies: U1, B3 */
+export function renderReportMarkdown(report: AutoresearchReport): string {
+  const lines: string[] = [
+    ...renderMetadata(report),
+    ...renderImprovementTable(report),
+    ...renderIterationHistory(report),
+  ];
 
   // Convergence trend. Satisfies: U3
   if (report.stopReason === "converged") {
-    lines.push("## Convergence Analysis");
-    lines.push("");
-    lines.push("The loop stopped due to diminishing returns. Last iterations:");
-    lines.push("");
-    const last5 = report.iterationHistory.slice(-5);
-    for (const iter of last5) {
-      const bar = "█".repeat(Math.max(0, Math.round(iter.delta)));
+    lines.push("## Convergence Analysis", "");
+    lines.push("The loop stopped due to diminishing returns. Last iterations:", "");
+    for (const iter of report.iterationHistory.slice(-5)) {
+      const bar = "\u2588".repeat(Math.max(0, Math.round(iter.delta)));
       lines.push(`  Iteration ${iter.iteration}: delta=${iter.delta.toFixed(2)} ${bar}`);
     }
-    lines.push("");
-    lines.push("> To resume from this point, run `/autoresearch --resume`");
-    lines.push("");
+    lines.push("", "> To resume from this point, run `/autoresearch --resume`", "");
   }
 
   // Scope expansion proposals. Satisfies: TN3
   if (report.scopeProposals.length > 0) {
-    lines.push("## Out-of-Scope Improvement Proposals");
-    lines.push("");
-    lines.push("The following improvements were identified but require files outside the current scope:");
-    lines.push("");
+    lines.push("## Out-of-Scope Improvement Proposals", "");
+    lines.push("The following improvements were identified but require files outside the current scope:", "");
     for (const p of report.scopeProposals) {
-      lines.push(`### ${p.file} (${p.estimatedImpact} impact)`);
-      lines.push("");
-      lines.push(p.description);
-      lines.push(`Related constraints: ${p.relatedConstraints.join(", ")}`);
-      lines.push("");
+      lines.push(`### ${p.file} (${p.estimatedImpact} impact)`, "", p.description);
+      lines.push(`Related constraints: ${p.relatedConstraints.join(", ")}`, "");
     }
   }
 
   // Learning report. Satisfies: TN7
   if (report.learningReport) {
-    lines.push("## Learning Report");
-    lines.push("");
-    lines.push("Full LLM evaluation of all changes with explanations:");
-    lines.push("");
-    lines.push(report.learningReport);
-    lines.push("");
+    lines.push("## Learning Report", "");
+    lines.push("Full LLM evaluation of all changes with explanations:", "");
+    lines.push(report.learningReport, "");
   }
 
-  lines.push("---");
-  lines.push("*Generated by /autoresearch*");
-
+  lines.push("---", "*Generated by /autoresearch*");
   return lines.join("\n");
 }
 
 /** Format convergence communication for auto-stop display. Satisfies: U3 */
 export function formatConvergenceMessage(state: LoopState): string {
-  const last = state.iterations.slice(-state.config.plateauWindow);
-  const deltas = last.map((i) => i.delta.toFixed(2)).join(", ");
-  const totalImprovement =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].compositeScore -
-        state.baseline.compositeScore
-      : 0;
+  const plateauSlice = state.iterations.slice(-state.config.plateauWindow);
+  const deltas = plateauSlice.map((i) => i.delta.toFixed(2)).join(", ");
+  const latest = lastIteration(state);
+  const totalImprovement = latest
+    ? latest.compositeScore - state.baseline.compositeScore
+    : 0;
 
   return `
 Autoresearch loop auto-stopped: diminishing returns detected.
 
 Last ${state.config.plateauWindow} iteration deltas: [${deltas}]
 Threshold: ${state.config.convergenceThreshold}
-Total improvement: ${totalImprovement >= 0 ? "+" : ""}${totalImprovement.toFixed(1)} points (${state.baseline.compositeScore} → ${state.iterations[state.iterations.length - 1]?.compositeScore ?? state.baseline.compositeScore})
+Total improvement: ${totalImprovement >= 0 ? "+" : ""}${totalImprovement.toFixed(1)} points (${state.baseline.compositeScore} → ${latest?.compositeScore ?? state.baseline.compositeScore})
 Iterations completed: ${state.currentIteration}/${state.config.maxIterations}
 
 To resume: /autoresearch --resume

@@ -4,14 +4,17 @@
 // Core loop engine — orchestrates the improve-evaluate-iterate cycle
 
 import type {
-  LoopState,
-  LoopConfig,
-  IterationScores,
-  EvalConstraint,
   EvalResult,
+  IterationScores,
+  LoopConfig,
+  LoopState,
   NormalizedScore,
-  DEFAULTS,
 } from "./types";
+
+/** Get the most recent iteration from state, or undefined if none exist */
+function lastIteration(state: LoopState): IterationScores | undefined {
+  return state.iterations[state.iterations.length - 1];
+}
 
 /** Initialize a new loop state with baseline scores. Satisfies: RT-2, RT-6, T1 */
 export function initLoopState(
@@ -45,12 +48,15 @@ export function initLoopState(
   };
 }
 
-/** Check if the loop should continue. Satisfies: O1, O2, O4, T5, TN6
- *  Returns null if should continue, or stop reason if should stop */
-export function shouldStop(state: LoopState): {
+/** Describes why the loop should stop */
+export interface StopCondition {
   reason: LoopState["stopReason"];
   details: string;
-} | null {
+}
+
+/** Check if the loop should continue. Satisfies: O1, O2, O4, T5, TN6
+ *  Returns null if should continue, or stop reason if should stop */
+export function shouldStop(state: LoopState): StopCondition | null {
   // O1: Max iterations cap
   if (state.currentIteration >= state.config.maxIterations) {
     return {
@@ -88,82 +94,103 @@ export function shouldStop(state: LoopState): {
   return null; // Continue
 }
 
+/** Result of processing an iteration's evaluation results */
+export interface IterationProcessResult {
+  scores: IterationScores;
+  action: "keep" | "revert" | "circuit_break";
+  regressionDetails?: string;
+}
+
+/** Aggregated scores and weighted composite from a set of evaluation results */
+interface CompositeResult {
+  scores: Record<string, NormalizedScore>;
+  compositeScore: NormalizedScore;
+}
+
+/** A detected regression in a single constraint */
+interface RegressionInfo {
+  constraintId: string;
+  regressionPct: number;
+}
+
+/** Build the score map and weighted composite from evaluation results */
+function computeComposite(results: EvalResult[]): CompositeResult {
+  const scores: Record<string, NormalizedScore> = {};
+  for (const r of results) {
+    scores[r.constraintId] = r.normalizedScore;
+  }
+
+  const count = results.length;
+  const compositeScore =
+    count > 0
+      ? Math.round(results.reduce((sum, r) => sum + r.normalizedScore, 0) / count)
+      : 0;
+
+  return { scores, compositeScore };
+}
+
+/** Check if any constraint regressed beyond the circuit breaker threshold. Satisfies: O3 */
+function checkCircuitBreaker(
+  scores: Record<string, NormalizedScore>,
+  state: LoopState
+): RegressionInfo | null {
+  for (const [constraintId, score] of Object.entries(scores)) {
+    const best = state.bestScores[constraintId] ?? state.baseline.scores[constraintId] ?? 0;
+    if (best > 0) {
+      const regressionPct = (best - score) / best;
+      if (regressionPct > state.config.regressionThreshold) {
+        return { constraintId, regressionPct };
+      }
+    }
+  }
+  return null;
+}
+
 /** Process evaluation results for an iteration. Satisfies: RT-6, O3, TN4, TN6 */
 export function processIterationResults(
   state: LoopState,
   results: EvalResult[],
   tokensUsed: number,
   durationMs: number
-): {
-  scores: IterationScores;
-  action: "keep" | "revert" | "circuit_break";
-  regressionDetails?: string;
-} {
-  // Build score map
-  const scores: Record<string, NormalizedScore> = {};
-  for (const r of results) {
-    scores[r.constraintId] = r.normalizedScore;
-  }
+): IterationProcessResult {
+  const { scores, compositeScore } = computeComposite(results);
 
-  // Calculate composite (weighted average)
-  const totalWeight = results.length; // Assuming equal weight for now
-  const compositeScore =
-    totalWeight > 0
-      ? Math.round(results.reduce((s, r) => s + r.normalizedScore, 0) / totalWeight)
-      : 0;
-
-  const prevComposite =
-    state.iterations.length > 0
-      ? state.iterations[state.iterations.length - 1].compositeScore
-      : state.baseline.compositeScore;
+  const prevComposite = lastIteration(state)?.compositeScore ?? state.baseline.compositeScore;
 
   const delta = compositeScore - prevComposite;
 
-  // O3: Check for regression circuit breaker
-  for (const [constraintId, score] of Object.entries(scores)) {
-    const best = state.bestScores[constraintId] ?? state.baseline.scores[constraintId] ?? 0;
-    if (best > 0) {
-      const regressionPct = (best - score) / best;
-      if (regressionPct > state.config.regressionThreshold) {
-        // TN4: This is the FIRST detection — caller should retry sequentially
-        // If retry confirms, return circuit_break
-        return {
-          scores: {
-            iteration: state.currentIteration + 1,
-            timestamp: new Date().toISOString(),
-            scores,
-            compositeScore,
-            delta,
-            tokensUsed,
-            durationMs,
-            status: "regressed",
-          },
-          action: "circuit_break",
-          regressionDetails: `Constraint "${constraintId}" regressed ${(regressionPct * 100).toFixed(1)}% from best (${best} → ${score}). Threshold: ${state.config.regressionThreshold * 100}%`,
-        };
-      }
-    }
+  // O3 + TN4: Check for regression circuit breaker
+  const regression = checkCircuitBreaker(scores, state);
+  if (regression) {
+    return {
+      scores: {
+        iteration: state.currentIteration + 1,
+        timestamp: new Date().toISOString(),
+        scores,
+        compositeScore,
+        delta,
+        tokensUsed,
+        durationMs,
+        status: "regressed",
+      },
+      action: "circuit_break",
+      regressionDetails: `Constraint "${regression.constraintId}" regressed ${(regression.regressionPct * 100).toFixed(1)}% from best. Threshold: ${state.config.regressionThreshold * 100}%`,
+    };
   }
 
-  // Determine keep or revert
   const improved = compositeScore > prevComposite;
 
-  // T5 + TN6: Update plateau counter
-  const belowThreshold = Math.abs(delta) < state.config.convergenceThreshold;
-
-  const iterationScores: IterationScores = {
-    iteration: state.currentIteration + 1,
-    timestamp: new Date().toISOString(),
-    scores,
-    compositeScore,
-    delta,
-    tokensUsed,
-    durationMs,
-    status: improved ? "improved" : "reverted",
-  };
-
   return {
-    scores: iterationScores,
+    scores: {
+      iteration: state.currentIteration + 1,
+      timestamp: new Date().toISOString(),
+      scores,
+      compositeScore,
+      delta,
+      tokensUsed,
+      durationMs,
+      status: improved ? "improved" : "reverted",
+    },
     action: improved ? "keep" : "revert",
   };
 }
@@ -208,7 +235,7 @@ export function updateState(
 
 /** Format live progress line for display. Satisfies: U1 */
 export function formatProgress(state: LoopState): string {
-  const latest = state.iterations[state.iterations.length - 1];
+  const latest = lastIteration(state);
   const elapsed = Math.round(
     (Date.now() - new Date(state.startedAt).getTime()) / 1000
   );

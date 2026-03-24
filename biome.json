@@ -1,28 +1,28 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "complexity": {
-        "noExcessiveCognitiveComplexity": {
-          "level": "warn",
-          "options": { "maxAllowedComplexity": 15 }
-        }
-      },
-      "suspicious": {
-        "noExplicitAny": "warn"
-      },
-      "style": {
-        "useConst": "error",
-        "noNonNullAssertion": "warn"
-      }
-    }
-  },
-  "formatter": {
-    "enabled": false
-  },
-  "files": {
-    "includes": ["src/**/*.ts", "plugin/lib/**/*.ts", "tests/**/*.ts"]
-  }
+	"$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noExcessiveCognitiveComplexity": {
+					"level": "warn",
+					"options": { "maxAllowedComplexity": 15 }
+				}
+			},
+			"suspicious": {
+				"noExplicitAny": "warn"
+			},
+			"style": {
+				"useConst": "error",
+				"noNonNullAssertion": "warn"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": false
+	},
+	"files": {
+		"includes": ["src/**/*.ts", "tests/**/*.ts"]
+	}
 }

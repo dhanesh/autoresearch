@@ -5,6 +5,17 @@
 import { createHash } from "node:crypto";
 import type { EvalConstraint, EvalResult, NormalizedScore } from "../types";
 
+/** Result of a command hash verification check */
+export interface VerificationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/** Format an unknown error value into a message string */
+export function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /** Compute SHA-256 hash of a command string. Satisfies: TN5 */
 export function hashCommand(command: string): string {
   return createHash("sha256").update(command).digest("hex");
@@ -13,7 +24,7 @@ export function hashCommand(command: string): string {
 /** Verify command hash hasn't been tampered with. Satisfies: TN5 */
 export function verifyCommandHash(
   constraint: EvalConstraint
-): { valid: boolean; error?: string } {
+): VerificationResult {
   const currentHash = hashCommand(constraint.command);
   if (currentHash !== constraint.commandHash) {
     return {
@@ -158,7 +169,7 @@ export function buildCustomResult(
       normalizedScore: 0,
       durationMs,
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: formatError(error),
     };
   }
 }

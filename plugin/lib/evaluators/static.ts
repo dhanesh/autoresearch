@@ -2,6 +2,7 @@
 // Evaluator for static analysis: linters, type checkers, complexity analyzers
 
 import type { EvalResult, NormalizedScore } from "../types";
+import { formatError } from "./custom";
 
 /** Parse ESLint JSON output and normalize to 0-100 score (100 = no issues) */
 export function normalizeEslintOutput(raw: string): NormalizedScore {
@@ -85,7 +86,7 @@ export function buildStaticResult(
       normalizedScore: 0,
       durationMs,
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: formatError(error),
     };
   }
 }

@@ -2,6 +2,7 @@
 // Evaluator for test suites: pass rate and coverage
 
 import type { EvalResult, NormalizedScore } from "../types";
+import { formatError } from "./custom";
 
 /** Parse test runner output for pass/fail counts and normalize.
  *  Supports common formats: Jest, Vitest, bun test, pytest */
@@ -104,7 +105,7 @@ export function buildTestResult(
       normalizedScore: 0,
       durationMs,
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: formatError(error),
     };
   }
 }

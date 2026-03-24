@@ -23,6 +23,6 @@
 		"enabled": false
 	},
 	"files": {
-		"includes": ["src/**/*.ts", "plugin/lib/**/*.ts", "tests/**/*.ts"]
+		"includes": ["src/**/*.ts", "tests/**/*.ts"]
 	}
 }

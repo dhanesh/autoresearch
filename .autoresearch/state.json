@@ -1,0 +1,81 @@
+{
+  "runId": "ar-20260325T015400",
+  "branch": "autoresearch/20260325T015403-entire-project",
+  "scope": ["src/", "plugin/lib/", "tests/", "profiles/", "install/"],
+  "startedAt": "2026-03-25T01:54:00.000Z",
+  "completedAt": "2026-03-25T02:17:00.000Z",
+  "config": {
+    "maxIterations": 15,
+    "timeBoxSeconds": 120,
+    "totalTimeoutSeconds": 3600,
+    "tokenBudget": 500000,
+    "convergenceThreshold": 0.5,
+    "plateauWindow": 3,
+    "regressionThreshold": 0.10,
+    "llmEvalInterval": 3,
+    "parallelEval": true,
+    "commandTimeoutSeconds": 30
+  },
+  "baseline": {
+    "iteration": 0,
+    "timestamp": "2026-03-25T01:54:00.000Z",
+    "scores": {
+      "eval-tsc": 100,
+      "eval-biome": 72,
+      "eval-vitest": 100,
+      "eval-llm": 65
+    },
+    "compositeScore": 82,
+    "delta": 0,
+    "tokensUsed": 0,
+    "durationMs": 0,
+    "status": "improved"
+  },
+  "currentIteration": 15,
+  "bestScores": {
+    "eval-tsc": 100,
+    "eval-biome": 100,
+    "eval-vitest": 100,
+    "eval-llm": 87
+  },
+  "bestComposite": 96,
+  "plateauCounter": 2,
+  "totalTokensUsed": 200000,
+  "totalDurationMs": 1380000,
+  "stopReason": "max_iterations",
+  "stopDetails": "Reached maximum iteration cap (15)",
+  "scopeExpansionProposals": [
+    {
+      "file": "plugin/lib/*",
+      "description": "The plugin/lib/ directory is a near-exact copy of src/. Should import from src/ or use a build step.",
+      "estimatedImpact": "high",
+      "relatedConstraints": ["eval-llm"]
+    }
+  ],
+  "registeredCommands": [
+    {
+      "id": "eval-tsc",
+      "command": "npx tsc --noEmit 2>&1 || true",
+      "hash": "1887e8272d01376e24efb889aa0796ca9ab4f9b1f27d708b01016e089a38d7fd",
+      "weight": 0.2
+    },
+    {
+      "id": "eval-biome",
+      "command": "npx biome check . --reporter json 2>&1 || true",
+      "hash": "384029ea146da1b93c4fbdb3d8cd0829fe9384bbc628a4243b15cb369f134748",
+      "weight": 0.25
+    },
+    {
+      "id": "eval-vitest",
+      "command": "npx vitest run --reporter verbose 2>&1 || true",
+      "hash": "f0fee7d89e7280ec6aebd52c68006c4e98b1576af6aa102a396c90747a6e9c9f",
+      "weight": 0.25
+    },
+    {
+      "id": "eval-llm",
+      "command": "llm-eval",
+      "hash": "59d7a4aef11fed5413bf92a91526e97c5c3a8d78beb22ca91258c271ae2d91fd",
+      "weight": 0.3
+    }
+  ]
+}

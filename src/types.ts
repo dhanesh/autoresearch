@@ -163,6 +163,110 @@ export interface AutoresearchReport {
   learningReport?: string;
 }
 
+// ─── Production-Ready Extensions (manifold: production-ready) ────────────────
+
+/** Aggregation method for composite scoring. Satisfies: T3, TN5 */
+export type AggregationMethod = "arithmetic" | "harmonic" | "geometric";
+
+/** Scoring configuration for adaptive aggregation. Satisfies: T3, T8, TN5 */
+export interface ScoringConfig {
+  method: AggregationMethod;
+  /** Method to switch to after phase transition */
+  phaseTransitionMethod: AggregationMethod;
+  /** Fraction of maxIterations before switching (0-1). Default: 0.4 */
+  phaseTransitionPct: number;
+  /** Switch when all axes exceed this score. Default: 80 */
+  phaseTransitionScoreThreshold: number;
+}
+
+/** Token breakdown by phase. Satisfies: T4, U2 */
+export interface TokenBreakdown {
+  discovery: number;
+  baseline: number;
+  evaluation: number;
+  improvement: number;
+  reporting: number;
+}
+
+/** Per-constraint token usage in a single iteration. Satisfies: T4 */
+export interface ConstraintTokenUsage {
+  constraintId: string;
+  tokensUsed: number;
+}
+
+/** Permission entry for the manifest. Satisfies: T1, S1, TN1 */
+export interface PermissionEntry {
+  type: "bash" | "write" | "edit" | "read" | "git";
+  target: string;
+  purpose: string;
+  requiredBy: string;
+  required: boolean;
+}
+
+/** Full permission manifest. Satisfies: T1, U1, TN1 */
+export interface PermissionManifest {
+  entries: PermissionEntry[];
+  groups: Record<string, PermissionEntry[]>;
+}
+
+/** Permission verification result. Satisfies: O4 */
+export interface PermissionVerifyResult {
+  entry: PermissionEntry;
+  granted: boolean;
+  error?: string;
+}
+
+/** Fallback evaluator definition. Satisfies: TN4 */
+export interface FallbackEvaluator {
+  primaryId: string;
+  fallback: UnhashedConstraint;
+  expectedCorrelation: number;
+}
+
+/** Confidence interval for a score. Satisfies: U3 */
+export interface ConfidenceInterval {
+  mean: number;
+  lower: number;
+  upper: number;
+  stdDev: number;
+  n: number;
+}
+
+/** Eval scheduling decision. Satisfies: T5, TN3 */
+export type EvalScheduleDecision = "full" | "lite" | "skip";
+
+/** Weight rationale for a single constraint. Satisfies: T7 */
+export interface ConstraintRationale {
+  iso25010: string;
+  justification: string;
+  reference?: string;
+}
+
+/** Pre-computed orthogonality data. Satisfies: T2 */
+export interface OrthogonalityMatrix {
+  correlations: Record<string, Record<string, number>>;
+  isOrthogonal: boolean;
+}
+
+/** Extended preset profile with scientific grounding. Satisfies: T7, TN2, RT-4 */
+export interface ScientificProfile extends PresetProfile {
+  scoring: ScoringConfig;
+  constraintRationale: Record<string, ConstraintRationale>;
+  orthogonalityMatrix?: OrthogonalityMatrix;
+}
+
+/** Extended report with analytics. Satisfies: B4, U2, U3, U4, RT-6 */
+export interface ProductionReport extends AutoresearchReport {
+  tokenBreakdown: TokenBreakdown;
+  perIterationTokens: ConstraintTokenUsage[][];
+  estimatedCostUsd: number;
+  tokensPerImprovementPoint: number;
+  confidenceIntervals: Record<string, ConfidenceInterval>;
+  predictedCeiling: number;
+  optimalStopIteration: number;
+  aggregationPhaseTransition?: number;
+}
+
 /** Default configuration values */
 export const DEFAULTS: LoopConfig = {
   maxIterations: 20,

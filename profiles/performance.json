@@ -40,5 +40,42 @@
     }
   ],
   "suggestedTimeBox": 180,
-  "suggestedMaxIterations": 20
+  "suggestedMaxIterations": 20,
+  "scoring": {
+    "method": "arithmetic",
+    "phaseTransitionMethod": "geometric",
+    "phaseTransitionPct": 0.4,
+    "phaseTransitionScoreThreshold": 75
+  },
+  "constraintRationale": {
+    "eval-lint": {
+      "iso25010": "Maintainability > Analysability",
+      "justification": "Lower weight in performance profile because lint rules don't directly measure runtime behavior. Retained as a guard against code quality regression during performance optimization.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.6"
+    },
+    "eval-tests": {
+      "iso25010": "Reliability > Fault Tolerance",
+      "justification": "Test pass rate guards against correctness regression during performance optimization. Weight ensures behavioral correctness is maintained while optimizing speed.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.2"
+    },
+    "eval-benchmark": {
+      "iso25010": "Performance Efficiency > Time Behaviour",
+      "justification": "Highest weight: direct measurement of the target quality characteristic. Custom benchmarks measure actual runtime performance (bundle size, execution time, memory usage).",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.3; Smith & Williams 'Performance Solutions' (2002)"
+    },
+    "eval-llm": {
+      "iso25010": "Performance Efficiency > Resource Utilisation",
+      "justification": "LLM evaluates algorithmic efficiency, caching strategies, and resource management patterns that benchmarks may not directly measure but impact long-term performance.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.3"
+    }
+  },
+  "orthogonalityMatrix": {
+    "correlations": {
+      "eval-lint": { "eval-tests": 0.2, "eval-benchmark": 0.1, "eval-llm": 0.25 },
+      "eval-tests": { "eval-lint": 0.2, "eval-benchmark": 0.35, "eval-llm": 0.3 },
+      "eval-benchmark": { "eval-lint": 0.1, "eval-tests": 0.35, "eval-llm": 0.45 },
+      "eval-llm": { "eval-lint": 0.25, "eval-tests": 0.3, "eval-benchmark": 0.45 }
+    },
+    "isOrthogonal": true
+  }
 }

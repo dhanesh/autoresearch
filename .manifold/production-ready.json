@@ -1,0 +1,1149 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dhanesh/manifold/main/install/manifold-structure.schema.json",
+  "schema_version": 3,
+  "feature": "production-ready",
+  "phase": "VERIFIED",
+  "domain": "software",
+  "created": "2026-03-28T00:00:00-08:00",
+  "constraints": {
+    "business": [
+      {
+        "id": "B1",
+        "type": "invariant",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "B2",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "B3",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "B4",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      }
+    ],
+    "technical": [
+      {
+        "id": "T1",
+        "type": "invariant",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "T2",
+        "type": "boundary",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "T3",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "T4",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "T5",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "T6",
+        "type": "boundary",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "T7",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "T8",
+        "type": "goal",
+        "source": "pre-mortem",
+        "challenger": "technical-reality"
+      }
+    ],
+    "user_experience": [
+      {
+        "id": "U1",
+        "type": "invariant",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "U2",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "U3",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "U4",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      }
+    ],
+    "security": [
+      {
+        "id": "S1",
+        "type": "invariant",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "S2",
+        "type": "invariant",
+        "source": "interview",
+        "challenger": "technical-reality"
+      }
+    ],
+    "operational": [
+      {
+        "id": "O1",
+        "type": "boundary",
+        "source": "interview",
+        "challenger": "technical-reality"
+      },
+      {
+        "id": "O2",
+        "type": "boundary",
+        "source": "interview",
+        "challenger": "stakeholder",
+        "threshold": {
+          "kind": "deterministic",
+          "ceiling": "10% of token budget reserved for reporting"
+        }
+      },
+      {
+        "id": "O3",
+        "type": "goal",
+        "source": "interview",
+        "challenger": "stakeholder"
+      },
+      {
+        "id": "O4",
+        "type": "boundary",
+        "source": "pre-mortem",
+        "challenger": "technical-reality"
+      }
+    ]
+  },
+  "tensions": [
+    {
+      "id": "TN1",
+      "type": "trade_off",
+      "between": [
+        "T1",
+        "S1"
+      ],
+      "status": "resolved",
+      "resolution": "Exact manifest: compute precise permission set from profile + scope + detected commands. All needed = minimum needed.",
+      "decision": "A",
+      "validation_criteria": [
+        "Permission manifest is computed from profile + scope + detected commands only",
+        "No blanket Bash or Write permissions are requested",
+        "Every requested permission maps to a specific eval command or file operation",
+        "Loop runs to completion without permission prompts after pre-flight"
+      ]
+    },
+    {
+      "id": "TN2",
+      "type": "resource_tension",
+      "between": [
+        "B2",
+        "B3"
+      ],
+      "status": "resolved",
+      "resolution": "Pre-computed rigor: weight rationale and orthogonality baked into profiles. Only LLM confidence intervals computed at runtime.",
+      "decision": "C",
+      "validation_criteria": [
+        "Profile JSON files include documented weight rationale (zero runtime cost)",
+        "Axis orthogonality analysis is pre-computed at profile definition time",
+        "Only LLM-axis confidence intervals are computed at runtime",
+        "Evaluation overhead is less than 5% of total token budget"
+      ],
+      "propagation_effects": [
+        {
+          "constraint_id": "T7",
+          "effect": "LOOSENED",
+          "note": "Rationale baked into profiles eliminates runtime cost"
+        },
+        {
+          "constraint_id": "B3",
+          "effect": "LOOSENED",
+          "note": "Minimal runtime overhead maximizes improvement budget"
+        }
+      ]
+    },
+    {
+      "id": "TN3",
+      "type": "trade_off",
+      "between": [
+        "T5",
+        "U3"
+      ],
+      "status": "resolved",
+      "resolution": "Lite eval fallback: when skipping full LLM eval, run 1-dimension probe (1/4 cost) to maintain axis coverage and confidence data.",
+      "decision": "A",
+      "validation_criteria": [
+        "When adaptive scheduler skips full LLM eval, a 1-dimension probe runs instead",
+        "Lite probe costs <= 25% of full 4-dimension eval",
+        "All 4 evaluation axes report scores on every iteration",
+        "Confidence intervals are available for LLM axis on every iteration"
+      ],
+      "propagation_effects": [
+        {
+          "constraint_id": "T6",
+          "effect": "LOOSENED",
+          "note": "4-axis minimum maintained via lite probes"
+        },
+        {
+          "constraint_id": "O3",
+          "effect": "LOOSENED",
+          "note": "75% token savings on skipped iterations"
+        }
+      ]
+    },
+    {
+      "id": "TN4",
+      "type": "trade_off",
+      "between": [
+        "O1",
+        "T6"
+      ],
+      "status": "resolved",
+      "resolution": "Auto-substitution: each axis has a fallback evaluator requiring no Bash permission. Denied axes auto-substitute to maintain 4-axis minimum.",
+      "decision": "A",
+      "validation_criteria": [
+        "Each evaluation axis has a defined fallback evaluator that requires no Bash permission",
+        "When a permission is denied, the corresponding fallback activates automatically",
+        "Profile maintains 4+ axes after any single permission denial",
+        "Fallback evaluators are validated for orthogonality against remaining axes"
+      ],
+      "propagation_effects": [
+        {
+          "constraint_id": "T2",
+          "effect": "TIGHTENED",
+          "note": "Fallback axes must be validated for orthogonality"
+        }
+      ]
+    },
+    {
+      "id": "TN5",
+      "type": "trade_off",
+      "between": [
+        "T3",
+        "T8"
+      ],
+      "status": "resolved",
+      "resolution": "Adaptive aggregation: arithmetic mean first 40% of iterations (easy wins), switch to harmonic when all axes >80 or at 40% mark (polish).",
+      "decision": "C",
+      "validation_criteria": [
+        "Loop uses arithmetic mean for first 40% of max_iterations",
+        "Loop switches to harmonic mean when all axes exceed 80 or at 40% mark",
+        "Phase transition is logged in iteration history",
+        "Report trajectory visualization shows the aggregation phase transition"
+      ],
+      "propagation_effects": [
+        {
+          "constraint_id": "U4",
+          "effect": "LOOSENED",
+          "note": "Phase transition creates visible trajectory inflection point"
+        },
+        {
+          "constraint_id": "B3",
+          "effect": "LOOSENED",
+          "note": "Arithmetic phase harvests easy wins first"
+        }
+      ]
+    }
+  ],
+  "anchors": {
+    "required_truths": [
+      {
+        "id": "RT-1",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B1",
+          "T1",
+          "S1",
+          "S2",
+          "U1",
+          "O1",
+          "O4"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-1.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-1.2",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-1.3",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/permissions.ts",
+            "status": "VERIFIED",
+            "id": "EV-1"
+          },
+          {
+            "type": "content_match",
+            "path": "src/permissions.ts",
+            "pattern": "buildPermissionManifest",
+            "status": "VERIFIED",
+            "id": "EV-2"
+          },
+          {
+            "type": "content_match",
+            "path": "src/permissions.ts",
+            "pattern": "verifyPermissions",
+            "status": "VERIFIED",
+            "id": "EV-3"
+          },
+          {
+            "type": "test_passes",
+            "path": "tests/permissions.test.ts",
+            "test_name": "creates entries for non-LLM eval commands",
+            "status": "VERIFIED",
+            "id": "EV-4"
+          }
+        ]
+      },
+      {
+        "id": "RT-2",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B2",
+          "T3",
+          "T8"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-2.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-2.2",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-2.3",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/scoring.ts",
+            "status": "VERIFIED",
+            "id": "EV-5"
+          },
+          {
+            "type": "content_match",
+            "path": "src/scoring.ts",
+            "pattern": "weightedHarmonicMean",
+            "status": "VERIFIED",
+            "id": "EV-6"
+          },
+          {
+            "type": "content_match",
+            "path": "src/scoring.ts",
+            "pattern": "phaseAdaptiveComposite",
+            "status": "VERIFIED",
+            "id": "EV-7"
+          },
+          {
+            "type": "test_passes",
+            "path": "tests/scoring.test.ts",
+            "test_name": "uses arithmetic mean in early iterations",
+            "status": "VERIFIED",
+            "id": "EV-8"
+          }
+        ]
+      },
+      {
+        "id": "RT-3",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B3",
+          "T4",
+          "U2",
+          "O2",
+          "O3"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-3.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-3.2",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-3.3",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/analytics.ts",
+            "status": "VERIFIED",
+            "id": "EV-9"
+          },
+          {
+            "type": "content_match",
+            "path": "src/analytics.ts",
+            "pattern": "addPhaseTokens",
+            "status": "VERIFIED",
+            "id": "EV-10"
+          },
+          {
+            "type": "content_match",
+            "path": "src/types.ts",
+            "pattern": "TokenBreakdown",
+            "status": "VERIFIED",
+            "id": "EV-11"
+          },
+          {
+            "type": "test_passes",
+            "path": "tests/analytics.test.ts",
+            "test_name": "accumulates phase tokens",
+            "status": "VERIFIED",
+            "id": "EV-12"
+          }
+        ]
+      },
+      {
+        "id": "RT-4",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B2",
+          "T2",
+          "T6",
+          "T7"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-4.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-4.2",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-4.3",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "profiles/quality.json",
+            "pattern": "constraintRationale",
+            "status": "VERIFIED",
+            "id": "EV-13"
+          },
+          {
+            "type": "content_match",
+            "path": "profiles/quality.json",
+            "pattern": "iso25010",
+            "status": "VERIFIED",
+            "id": "EV-14"
+          },
+          {
+            "type": "content_match",
+            "path": "profiles/quality.json",
+            "pattern": "orthogonalityMatrix",
+            "status": "VERIFIED",
+            "id": "EV-15"
+          }
+        ]
+      },
+      {
+        "id": "RT-5",
+        "status": "SATISFIED",
+        "maps_to": [
+          "T5",
+          "U3",
+          "O3"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-5.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-5.2",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-5.3",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/scheduling.ts",
+            "status": "VERIFIED",
+            "id": "EV-16"
+          },
+          {
+            "type": "content_match",
+            "path": "src/scheduling.ts",
+            "pattern": "computeVolatility",
+            "status": "VERIFIED",
+            "id": "EV-17"
+          },
+          {
+            "type": "content_match",
+            "path": "src/evaluators/llm.ts",
+            "pattern": "buildLiteProbePrompt",
+            "status": "VERIFIED",
+            "id": "EV-18"
+          },
+          {
+            "type": "test_passes",
+            "path": "tests/scheduling.test.ts",
+            "test_name": "runs full eval for high volatility",
+            "status": "VERIFIED",
+            "id": "EV-19"
+          }
+        ]
+      },
+      {
+        "id": "RT-6",
+        "status": "SATISFIED",
+        "maps_to": [
+          "B4",
+          "U2",
+          "U3",
+          "U4"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-6.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-6.2",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-6.3",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "content_match",
+            "path": "src/analytics.ts",
+            "pattern": "renderTokenDashboard",
+            "status": "VERIFIED",
+            "id": "EV-20"
+          },
+          {
+            "type": "content_match",
+            "path": "src/analytics.ts",
+            "pattern": "computeConfidenceInterval",
+            "status": "VERIFIED",
+            "id": "EV-21"
+          },
+          {
+            "type": "content_match",
+            "path": "src/analytics.ts",
+            "pattern": "fitDiminishingReturnsCurve",
+            "status": "VERIFIED",
+            "id": "EV-22"
+          },
+          {
+            "type": "test_passes",
+            "path": "tests/analytics.test.ts",
+            "test_name": "renders token dashboard markdown (U2)",
+            "status": "VERIFIED",
+            "id": "EV-23"
+          }
+        ]
+      },
+      {
+        "id": "RT-7",
+        "status": "SATISFIED",
+        "maps_to": [
+          "O1",
+          "T6"
+        ],
+        "depth": 0,
+        "children": [
+          {
+            "id": "RT-7.1",
+            "status": "SATISFIED",
+            "depth": 1
+          },
+          {
+            "id": "RT-7.2",
+            "status": "SATISFIED",
+            "depth": 1
+          }
+        ],
+        "evidence": [
+          {
+            "type": "file_exists",
+            "path": "src/evaluators/fallbacks.ts",
+            "status": "VERIFIED",
+            "id": "EV-24"
+          },
+          {
+            "type": "content_match",
+            "path": "src/evaluators/fallbacks.ts",
+            "pattern": "FALLBACK_REGISTRY",
+            "status": "VERIFIED",
+            "id": "EV-25"
+          },
+          {
+            "type": "content_match",
+            "path": "src/evaluators/fallbacks.ts",
+            "pattern": "rebalanceWeights",
+            "status": "VERIFIED",
+            "id": "EV-26"
+          },
+          {
+            "type": "test_passes",
+            "path": "tests/fallbacks.test.ts",
+            "test_name": "builds fallbacks for non-LLM constraints only",
+            "status": "VERIFIED",
+            "id": "EV-27"
+          }
+        ]
+      }
+    ],
+    "recommended_option": "A",
+    "binding_constraint": {
+      "required_truth_id": "RT-1",
+      "reason": "Only RT that blocks an INVARIANT (B1) with zero existing implementation. Without RT-1, the loop cannot execute uninterrupted \u2014 the core production-ready requirement.",
+      "dependency_chain": [
+        "B1",
+        "S2",
+        "U1",
+        "O4"
+      ]
+    }
+  },
+  "iterations": [
+    {
+      "number": 1,
+      "phase": "constrain",
+      "timestamp": "2026-03-28T00:10:00-08:00",
+      "constraints_added": 22,
+      "result": "22 constraints discovered: 20 from interview + 2 from pre-mortem stress-test (T8, O4)",
+      "by_category": {
+        "business": 4,
+        "technical": 8,
+        "user_experience": 4,
+        "security": 2,
+        "operational": 4
+      }
+    },
+    {
+      "number": 2,
+      "phase": "tension",
+      "timestamp": "2026-03-28T00:25:00-08:00",
+      "result": "5 tensions identified and resolved via interactive analysis",
+      "tensions_found": 5,
+      "tensions_resolved": 5,
+      "by_type": {
+        "trade_offs": 4,
+        "resource_tensions": 1,
+        "hidden_dependencies": 0
+      }
+    },
+    {
+      "number": 3,
+      "phase": "anchor",
+      "timestamp": "2026-03-28T00:40:00-08:00",
+      "result": "7 required truths derived (5 NOT_SATISFIED, 1 PARTIAL, 1 child SATISFIED). Binding constraint: RT-1. Option A selected.",
+      "required_truths": 7,
+      "by_status": {
+        "SATISFIED": 0,
+        "PARTIAL": 1,
+        "NOT_SATISFIED": 6,
+        "SPECIFICATION_READY": 0
+      },
+      "solution_options": 3,
+      "selected_option": "A: Layered Extension \u2014 4 new modules + type extensions, existing code untouched"
+    },
+    {
+      "number": 4,
+      "phase": "generate",
+      "timestamp": "2026-03-28T01:00:00-08:00",
+      "result": "16 artifacts generated (10 substantive, 3 config, 3 modified). 159 tests passing. All 22 constraints addressed."
+    },
+    {
+      "number": 5,
+      "phase": "verify",
+      "timestamp": "2026-03-28T01:20:00-08:00",
+      "result": "27/27 evidence items VERIFIED. 22/22 constraints SATISFIED at IMPLEMENTED+. 159/159 tests passing. 0 gaps.",
+      "evidence_verified": 27,
+      "evidence_total": 27,
+      "constraints_satisfied": 22,
+      "constraints_total": 22
+    },
+    {
+      "number": 6,
+      "phase": "integrate",
+      "timestamp": "2026-03-28T01:40:00-08:00",
+      "result": "9 integration points wired: 2 auto-wired (barrel export, plugin sync), 7 SKILL.md protocol updates (permissions, scoring, scheduling, tracking, reporting). 159 tests passing.",
+      "integration_points": 9,
+      "completed": 9,
+      "pending": 0,
+      "auto_wireable": 2,
+      "manual_required": 7
+    }
+  ],
+  "generation": {
+    "option": "A",
+    "timestamp": "2026-03-28T01:00:00-08:00",
+    "artifacts": [
+      {
+        "path": "src/permissions.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/scoring.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-2"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/analytics.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-3",
+          "RT-6"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/scheduling.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-5"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/fallbacks.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-7"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/types.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-1",
+          "RT-2",
+          "RT-3",
+          "RT-4",
+          "RT-5",
+          "RT-6",
+          "RT-7"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "src/evaluators/llm.ts",
+        "type": "code",
+        "satisfies": [
+          "RT-5"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "tests/permissions.test.ts",
+        "type": "test",
+        "satisfies": [
+          "RT-1"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "tests/scoring.test.ts",
+        "type": "test",
+        "satisfies": [
+          "RT-2"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "tests/analytics.test.ts",
+        "type": "test",
+        "satisfies": [
+          "RT-3",
+          "RT-6"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "tests/scheduling.test.ts",
+        "type": "test",
+        "satisfies": [
+          "RT-5"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "tests/fallbacks.test.ts",
+        "type": "test",
+        "satisfies": [
+          "RT-7"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "profiles/quality.json",
+        "type": "config",
+        "satisfies": [
+          "RT-4"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "profiles/performance.json",
+        "type": "config",
+        "satisfies": [
+          "RT-4"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      },
+      {
+        "path": "profiles/coverage.json",
+        "type": "config",
+        "satisfies": [
+          "RT-4"
+        ],
+        "status": "generated",
+        "artifact_class": "substantive"
+      }
+    ],
+    "coverage": {
+      "constraints_addressed": 22,
+      "constraints_total": 22,
+      "percentage": 100
+    }
+  },
+  "convergence": {
+    "status": "CONVERGED"
+  },
+  "constraint_graph": {
+    "version": 1,
+    "nodes": {
+      "B1": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "B2": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "B3": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "B4": {
+        "type": "constraint",
+        "category": "business"
+      },
+      "T1": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T2": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T3": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T4": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T5": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T6": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T7": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "T8": {
+        "type": "constraint",
+        "category": "technical"
+      },
+      "U1": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "U2": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "U3": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "U4": {
+        "type": "constraint",
+        "category": "user_experience"
+      },
+      "S1": {
+        "type": "constraint",
+        "category": "security"
+      },
+      "S2": {
+        "type": "constraint",
+        "category": "security"
+      },
+      "O1": {
+        "type": "constraint",
+        "category": "operational"
+      },
+      "O2": {
+        "type": "constraint",
+        "category": "operational"
+      },
+      "O3": {
+        "type": "constraint",
+        "category": "operational"
+      },
+      "O4": {
+        "type": "constraint",
+        "category": "operational"
+      }
+    },
+    "edges": {
+      "dependencies": [
+        {
+          "from": "B1",
+          "to": "T1",
+          "reason": "zero-interrupt requires upfront permission manifest"
+        },
+        {
+          "from": "B1",
+          "to": "S2",
+          "reason": "zero-interrupt requires no mid-loop escalation"
+        },
+        {
+          "from": "B2",
+          "to": "T2",
+          "reason": "scientific grounding requires orthogonal axes"
+        },
+        {
+          "from": "B2",
+          "to": "T3",
+          "reason": "scientific grounding requires statistical scoring"
+        },
+        {
+          "from": "B2",
+          "to": "T7",
+          "reason": "scientific grounding requires weight rationale"
+        },
+        {
+          "from": "B3",
+          "to": "T4",
+          "reason": "ROI optimization requires token accounting"
+        },
+        {
+          "from": "B3",
+          "to": "O3",
+          "reason": "ROI optimization requires efficiency tracking"
+        },
+        {
+          "from": "B4",
+          "to": "U2",
+          "reason": "actionable reports require token dashboard"
+        },
+        {
+          "from": "B4",
+          "to": "U4",
+          "reason": "actionable reports require trajectory analysis"
+        },
+        {
+          "from": "T1",
+          "to": "S1",
+          "reason": "permission manifest must respect scope minimization"
+        },
+        {
+          "from": "U1",
+          "to": "T1",
+          "reason": "pre-flight checklist surfaces the permission manifest"
+        },
+        {
+          "from": "U1",
+          "to": "O1",
+          "reason": "pre-flight must handle permission denial gracefully"
+        },
+        {
+          "from": "T5",
+          "to": "T4",
+          "reason": "adaptive scheduling depends on token tracking"
+        },
+        {
+          "from": "O2",
+          "to": "T4",
+          "reason": "budget allocation depends on token accounting"
+        },
+        {
+          "from": "T8",
+          "to": "T3",
+          "reason": "aggregation-strategy alignment depends on composite scoring choice"
+        },
+        {
+          "from": "O4",
+          "to": "T1",
+          "reason": "permission verification validates the manifest"
+        }
+      ],
+      "conflicts": [
+        {
+          "between": [
+            "T1",
+            "S1"
+          ],
+          "tension": "TN1"
+        },
+        {
+          "between": [
+            "B2",
+            "B3"
+          ],
+          "tension": "TN2"
+        },
+        {
+          "between": [
+            "T5",
+            "U3"
+          ],
+          "tension": "TN3"
+        },
+        {
+          "between": [
+            "O1",
+            "T6"
+          ],
+          "tension": "TN4"
+        },
+        {
+          "between": [
+            "T3",
+            "T8"
+          ],
+          "tension": "TN5"
+        }
+      ],
+      "satisfies": [
+        {
+          "from": "T1",
+          "to": "B1",
+          "reason": "upfront manifest enables zero-interrupt execution"
+        },
+        {
+          "from": "T4",
+          "to": "U2",
+          "reason": "token accounting feeds the consumption dashboard"
+        },
+        {
+          "from": "T3",
+          "to": "U3",
+          "reason": "statistical scoring enables confidence reporting"
+        }
+      ]
+    }
+  }
+}

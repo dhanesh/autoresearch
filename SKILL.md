@@ -75,6 +75,68 @@ For each accepted constraint:
 
 These commands are now LOCKED. You MUST NOT modify, generate, or execute any command not in this registered set during the loop.
 
+### Step 1.5: Pre-Flight Permissions
+
+<!-- Satisfies: B1 (Zero-Interrupt), T1 (Upfront Manifest), S1 (Scope Min), U1 (Checklist), O4 (Verify) -->
+<!-- Integration: src/permissions.ts, src/evaluators/fallbacks.ts -->
+
+Build the permission manifest and obtain all permissions BEFORE entering the loop:
+
+```
+1. Build permission manifest from finalized constraints + scope:
+   - Bash permissions: one per registered eval command
+   - Write permissions: one per scope path + .autoresearch/
+   - Git permissions: checkout, add, commit, checkout --, diff, status
+
+2. Group permissions by purpose and display the Pre-Flight Checklist:
+   "Pre-Flight Permission Checklist:
+    Evaluation (2 permissions):
+      - bash: bun run lint (required, for eval-lint)
+      - bash: bun test (required, for eval-tests)
+    Improvement (2 permissions):
+      - write: src/ (required, for loop)
+      - read: src/ (required, for loop)
+    Git (6 permissions):
+      - bash: git checkout -b, git add, git commit, ...
+    State (1 permission):
+      - write: .autoresearch/ (required, for loop)"
+
+3. Request ALL permissions at once (batch acquisition)
+
+4. Verify each permission with a dry-run probe:
+   - For bash: execute a no-op variant (e.g., `echo "probe"`)
+   - For write: verify directory is writable
+   - If any probe fails, the manifest is incomplete — fix before proceeding
+
+5. Handle denials gracefully (O1, TN4):
+   - Build fallback evaluator registry for all non-LLM constraints
+   - If a Bash eval permission is denied:
+     → Activate the LLM-based fallback evaluator for that axis
+     → Rebalance weights across remaining constraints
+   - If a core permission is denied (git, scope writes):
+     → STOP — cannot run without core permissions
+   - Display adapted constraint set to user
+```
+
+**CRITICAL:** After this step, no new permission prompts should occur during the loop. If one does, it indicates a manifest gap — log it as a bug.
+
+### Step 1.6: Scoring Configuration
+
+<!-- Satisfies: T3 (Statistical Composite), T8 (Aggregation Alignment), TN5 (Adaptive Aggregation) -->
+<!-- Integration: src/scoring.ts -->
+
+Configure the phase-adaptive composite scoring:
+
+```
+1. If profile has a `scoring` field, use it. Otherwise use defaults:
+   - method: "arithmetic" (early phase: broad improvement)
+   - phaseTransitionMethod: "harmonic" (late phase: enforce balance)
+   - phaseTransitionPct: 0.4 (switch at 40% of max_iterations)
+   - phaseTransitionScoreThreshold: 80 (or switch when all axes > 80)
+
+2. Log the scoring configuration in state.json
+```
+
 ## Phase 2: Baseline Capture
 
 <!-- Satisfies: RT-2, T1 -->
@@ -88,7 +150,9 @@ These commands are now LOCKED. You MUST NOT modify, generate, or execute any com
 3. Run ALL registered evaluation commands
    - Execute each command with timeout wrapper
    - Normalize each result to 0-100 score
-   - Calculate weighted composite score
+   - Calculate weighted composite using phaseAdaptiveComposite()
+     (iteration 0, so arithmetic mean with constraint weights)
+   - Track tokens used for baseline phase: addPhaseTokens("baseline", tokens)
    - Record as baseline in state.json
 
 4. Display baseline scores to user:
@@ -141,12 +205,25 @@ FOR EACH ITERATION (until stop condition met):
   │ - Run independent eval commands in parallel (default)│
   │ - If any command fails/flakes, re-run sequentially   │
   │                                                      │
-  │ LLM EVAL SAMPLING (TN2):                             │
-  │ - Run LLM eval only every 3rd iteration              │
-  │ - Use previous LLM score for skipped iterations      │
+  │ ADAPTIVE LLM EVAL SCHEDULING (T5, TN3):             │
+  │ - Compute volatility from recent iteration deltas    │
+  │ - High volatility (>2.0): run FULL 4-dimension eval  │
+  │ - Low volatility (<0.5): run LITE 1-dimension probe  │
+  │   (1/4 token cost, maintains axis coverage)          │
+  │ - Minimum guarantee: full eval every 5th iteration   │
+  │ - Always full eval on final iteration                │
+  │ - Carry forward previous score for skipped dims      │
   │                                                      │
-  │ Normalize all results to 0-100                       │
-  │ Calculate weighted composite score                   │
+  │ TOKEN TRACKING (T4):                                 │
+  │ - Track tokens per eval command: addPhaseTokens()    │
+  │ - Track per-constraint token usage per iteration     │
+  │                                                      │
+  │ COMPOSITE SCORING (T3, T8, TN5):                     │
+  │ - Normalize all results to 0-100                     │
+  │ - Calculate composite via phaseAdaptiveComposite():  │
+  │   First 40% iterations: weighted arithmetic mean     │
+  │   After 40% or all axes >80: weighted harmonic mean  │
+  │ - Log aggregation method used for this iteration     │
   └──────────────────────────────────────────────────────┘
 
   ┌─ DECIDE ────────────────────────────────────────────┐
@@ -176,13 +253,18 @@ FOR EACH ITERATION (until stop condition met):
   ┌─ TRACK ─────────────────────────────────────────────┐
   │ Update .autoresearch/state.json with:                │
   │ - Iteration scores, delta, status                    │
-  │ - Cumulative tokens used                             │
+  │ - Cumulative tokens used + per-phase breakdown (T4)  │
+  │ - Per-constraint token usage this iteration          │
   │ - Plateau counter                                    │
   │ - Best scores                                        │
+  │ - Aggregation method used (arithmetic/harmonic)      │
+  │ - Eval decision (full/lite/skip) and volatility      │
   │                                                      │
-  │ Display progress:                                    │
+  │ Display enhanced progress:                           │
   │ "[autoresearch] Iteration 5/20 | Score: 78 (+2.1)   │
-  │  | Tokens: 45000 | Elapsed: 340s"                    │
+  │  | Method: arithmetic | Eval: lite | Vol: 0.3        │
+  │  | Tokens: 45000 (eval: 12k, improve: 33k)          │
+  │  | Elapsed: 340s"                                    │
   └──────────────────────────────────────────────────────┘
 
 END FOR
@@ -195,28 +277,52 @@ END FOR
 When the loop stops (for ANY reason):
 
 ```
-1. Run FULL LLM evaluation (not sampled) on all changes since baseline
+1. Track reporting phase tokens: addPhaseTokens("reporting", ...)
+
+2. Run FULL LLM evaluation (not sampled) on all changes since baseline
    - This is the learning report (TN7)
    - Include WHY each change improves the code
    - Include what patterns were applied
 
-2. Generate .autoresearch/report.md with:
+3. Compute analytics (RT-6, B4):
+   - Token consumption dashboard: per-phase breakdown, cost estimate,
+     tokens-per-improvement-point efficiency ratio, points-per-dollar
+   - Score confidence intervals: compute CI from LLM rubric dimension
+     scores across all evaluated iterations (U3)
+   - Trajectory analysis: fit diminishing returns curve, predict quality
+     ceiling, identify optimal stop iteration, show aggregation phase
+     transition point (U4)
+   - Effect size: compute Cohen's d between baseline and final scores
+
+4. Generate .autoresearch/report.md with (using buildProductionReport):
    - Run metadata (scope, duration, iterations, stop reason)
    - Per-constraint improvement table (baseline → final, % change)
-   - Iteration history table (score, delta, status per iteration)
+   - Iteration history (score, delta, status, method, eval decision)
+   - **Token Consumption Dashboard** (U2):
+     Per-phase breakdown table, estimated cost, efficiency ratio,
+     per-iteration token usage with cumulative tracking
+   - **Score Confidence** (U3):
+     Per-constraint CI table with mean, 95% bounds, std dev
+   - **Trajectory Analysis** (U4):
+     ASCII chart with predicted ceiling, optimal stop, decay rate,
+     aggregation phase transition marker
    - Convergence analysis (if stopped due to diminishing returns)
    - Out-of-scope proposals (if any)
    - Full learning report from LLM evaluation
 
-3. Display convergence message (U3):
+5. Display enhanced convergence message (U3):
    "Autoresearch complete:
     - Iterations: 12/20
     - Stop reason: diminishing returns (3 consecutive < 0.5 delta)
     - Total improvement: +8.3 points (74.0 → 82.3)
+    - Predicted ceiling: 84.1 (headroom: 1.8 pts)
+    - Optimal stop was: iteration 9 (best ROI)
+    - Token usage: 120k (eval: 35k, improve: 75k, report: 10k)
+    - Estimated cost: $0.84 (7.0 points per dollar)
     - Report: .autoresearch/report.md
     - Branch: autoresearch/20260324T202006-src"
 
-4. Commit the report: "autoresearch: final report"
+6. Commit the report: "autoresearch: final report"
 ```
 
 ## Safety Rules (NON-NEGOTIABLE)

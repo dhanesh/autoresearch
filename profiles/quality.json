@@ -40,5 +40,42 @@
     }
   ],
   "suggestedTimeBox": 120,
-  "suggestedMaxIterations": 15
+  "suggestedMaxIterations": 15,
+  "scoring": {
+    "method": "arithmetic",
+    "phaseTransitionMethod": "harmonic",
+    "phaseTransitionPct": 0.4,
+    "phaseTransitionScoreThreshold": 80
+  },
+  "constraintRationale": {
+    "eval-lint": {
+      "iso25010": "Maintainability > Analysability",
+      "justification": "Lint rules enforce consistent style and catch common defects. Weight reflects that linting is necessary but not sufficient for quality — it catches surface issues (naming, unused vars) but misses deeper structural problems.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.6; Beller et al. 'Analyzing the State of Static Analysis' (ICSE 2016)"
+    },
+    "eval-types": {
+      "iso25010": "Reliability > Maturity",
+      "justification": "Static type checking prevents type-related runtime errors (null dereference, wrong argument types). Lower weight than tests because types catch a narrower class of defects, but higher confidence per finding.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.2; Gao et al. 'To Type or Not to Type' (ICSE 2017)"
+    },
+    "eval-tests": {
+      "iso25010": "Reliability > Fault Tolerance",
+      "justification": "Test pass rate measures behavioral correctness — whether the code does what it should. Equal weight to lint because both are essential: lint catches structural issues, tests catch behavioral ones.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.2; Mockus et al. 'Test Coverage and Post-Verification Defects' (ESEM 2009)"
+    },
+    "eval-llm": {
+      "iso25010": "Maintainability > Modifiability",
+      "justification": "LLM rubric evaluates subjective quality dimensions (readability, architecture, idiomaticness) that automated tools miss. Highest weight because these dimensions have the strongest correlation with long-term maintainability in empirical studies.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.6; Boehm et al. 'Quantitative Evaluation of Software Quality' (ICSE 1976)"
+    }
+  },
+  "orthogonalityMatrix": {
+    "correlations": {
+      "eval-lint": { "eval-types": 0.45, "eval-tests": 0.2, "eval-llm": 0.35 },
+      "eval-types": { "eval-lint": 0.45, "eval-tests": 0.3, "eval-llm": 0.25 },
+      "eval-tests": { "eval-lint": 0.2, "eval-types": 0.3, "eval-llm": 0.4 },
+      "eval-llm": { "eval-lint": 0.35, "eval-types": 0.25, "eval-tests": 0.4 }
+    },
+    "isOrthogonal": true
+  }
 }

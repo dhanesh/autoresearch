@@ -71,8 +71,20 @@ Autoresearch runs a tight loop inspired by Karpathy's autoresearch pattern:
 
 1. **Static Analysis** — Lint warnings, type errors, complexity scores
 2. **Test Suite** — Pass rate, coverage percentage
-3. **LLM Rubric** — Readability, architecture, maintainability, idiomaticness
+3. **LLM Rubric** — Readability, architecture, maintainability, idiomaticness (full or lite probe)
 4. **Custom Commands** — User-defined evaluation scripts
+
+Each axis is grounded in ISO 25010 quality characteristics with documented weight rationale and pre-computed orthogonality analysis.
+
+## Production-Ready Features
+
+- **Pre-flight permissions** — All Bash, Write, and git permissions requested upfront. Loop runs uninterrupted.
+- **Phase-adaptive scoring** — Arithmetic mean early (broad improvement), harmonic mean late (enforce balance)
+- **Adaptive LLM scheduling** — Full eval when volatile, lite 1-dimension probe when stable. 60-75% token savings.
+- **Fallback evaluators** — If a permission is denied, the axis auto-substitutes with an LLM-based fallback.
+- **Token economics** — Per-phase breakdown, cost estimation, tokens-per-improvement-point efficiency ratio
+- **Confidence intervals** — LLM scores reported with 95% CI from rubric dimension variance
+- **Trajectory prediction** — Diminishing returns curve fit, predicted quality ceiling, optimal stop point
 
 ## Safety Guarantees
 
@@ -81,21 +93,27 @@ Autoresearch runs a tight loop inspired by Karpathy's autoresearch pattern:
 - Scope enforcement (writes only within scope)
 - Circuit breaker (stops on >10% regression)
 - Non-destructive git (never force-push or delete)
+- Permission scope minimization (least-privilege manifest)
+- No mid-loop permission escalation
 
 ## Output
 
-- `.autoresearch/state.json` — Loop state for resume
-- `.autoresearch/report.md` — Full improvement report with learning summary
+- `.autoresearch/state.json` — Loop state for resume (includes token breakdown, volatility, eval decisions)
+- `.autoresearch/report.md` — Full report with token dashboard, confidence intervals, trajectory analysis, learning summary
 - Git branch `autoresearch/<timestamp>-<scope>` with per-iteration commits
 
 ## Reference Implementation
 
-The TypeScript modules in `lib/` provide structured reference implementations:
+The TypeScript modules in `src/` provide structured reference implementations:
 
 | Module | Purpose |
 |--------|---------|
-| `lib/types.ts` | Type definitions and defaults |
-| `lib/loop.ts` | Core loop state machine |
-| `lib/discovery.ts` | Codebase introspection + constraint pipeline |
-| `lib/report.ts` | Summary report generation |
-| `lib/evaluators/` | Static, test, LLM, and custom evaluators |
+| `src/types.ts` | Type definitions and defaults |
+| `src/loop.ts` | Core loop state machine |
+| `src/discovery.ts` | Codebase introspection + constraint pipeline |
+| `src/report.ts` | Summary report generation |
+| `src/permissions.ts` | Permission manifest + pre-flight verification |
+| `src/scoring.ts` | Phase-adaptive composite scoring (arithmetic/harmonic/geometric) |
+| `src/analytics.ts` | Token dashboard, confidence intervals, trajectory prediction |
+| `src/scheduling.ts` | Adaptive LLM eval scheduling + volatility detection |
+| `src/evaluators/` | Static, test, LLM, custom, and fallback evaluators |

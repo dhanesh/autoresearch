@@ -40,5 +40,42 @@
     }
   ],
   "suggestedTimeBox": 150,
-  "suggestedMaxIterations": 15
+  "suggestedMaxIterations": 15,
+  "scoring": {
+    "method": "arithmetic",
+    "phaseTransitionMethod": "harmonic",
+    "phaseTransitionPct": 0.5,
+    "phaseTransitionScoreThreshold": 85
+  },
+  "constraintRationale": {
+    "eval-coverage": {
+      "iso25010": "Reliability > Maturity",
+      "justification": "Highest weight: coverage is the primary optimization target. Line and branch coverage correlate with defect detection probability. Higher phaseTransitionPct (0.5) because coverage improvements are larger-grained than quality improvements.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.2; Mockus et al. 'Test Coverage and Post-Verification Defects' (ESEM 2009)"
+    },
+    "eval-tests": {
+      "iso25010": "Reliability > Fault Tolerance",
+      "justification": "Pass rate ensures new tests actually pass. High coverage with failing tests is worse than low coverage with passing tests.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.2"
+    },
+    "eval-lint": {
+      "iso25010": "Maintainability > Analysability",
+      "justification": "Minimal weight: lint guards against sloppy test code but is not the optimization target. Test files should still follow coding standards.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.6"
+    },
+    "eval-llm": {
+      "iso25010": "Maintainability > Testability",
+      "justification": "LLM evaluates test quality dimensions coverage tools miss: assertion specificity, edge case selection, test readability, and maintainability of test code itself.",
+      "reference": "ISO/IEC 25010:2011 Section 4.2.6; Athanasiou et al. 'Test Code Quality and Its Relation to Issue Handling Performance' (IEEE TSE 2014)"
+    }
+  },
+  "orthogonalityMatrix": {
+    "correlations": {
+      "eval-coverage": { "eval-tests": 0.55, "eval-lint": 0.15, "eval-llm": 0.4 },
+      "eval-tests": { "eval-coverage": 0.55, "eval-lint": 0.2, "eval-llm": 0.35 },
+      "eval-lint": { "eval-coverage": 0.15, "eval-tests": 0.2, "eval-llm": 0.3 },
+      "eval-llm": { "eval-coverage": 0.4, "eval-tests": 0.35, "eval-lint": 0.3 }
+    },
+    "isOrthogonal": true
+  }
 }

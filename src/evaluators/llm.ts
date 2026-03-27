@@ -144,3 +144,68 @@ export function buildLlmResult(
     success: true,
   };
 }
+
+// ─── Lite Probe Mode (TN3-A) ────────────────────────────────────────────────
+
+/** Build a lite probe prompt for a single rubric dimension. Satisfies: TN3, RT-5 */
+export function buildLiteProbePrompt(
+  changedFiles: { path: string; diff: string }[],
+  dimension: string = "readability"
+): string {
+  const dim = LLM_RUBRIC_DIMENSIONS.find((d) => d.name === dimension);
+  if (!dim) {
+    return buildLiteProbePrompt(changedFiles, "readability");
+  }
+
+  const fileList = changedFiles
+    .map((f) => `### ${f.path}\n\`\`\`diff\n${f.diff}\n\`\`\``)
+    .join("\n\n");
+
+  return `You are evaluating code changes on a single quality dimension. Score 0-100.
+
+## Changed Files
+
+${fileList}
+
+## Scoring
+
+**${dim.name}**: ${dim.prompt}
+
+## Response Format (STRICT)
+
+Respond ONLY with valid JSON:
+{
+  "score": <0-100>,
+  "justification": "<1-2 sentences>"
+}`;
+}
+
+/** Parse lite probe response. Satisfies: TN3 */
+export function parseLiteProbeResponse(raw: string): NormalizedScore {
+  try {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return 50;
+    const parsed = JSON.parse(jsonMatch[0]);
+    const score = parsed.score ?? 50;
+    return Math.max(0, Math.min(100, Math.round(score)));
+  } catch {
+    return 50;
+  }
+}
+
+/** Build an EvalResult from a lite probe. Satisfies: TN3, RT-5 */
+export function buildLiteProbeResult(
+  constraintId: string,
+  rawResponse: string,
+  durationMs: number
+): EvalResult {
+  const score = parseLiteProbeResponse(rawResponse);
+  return {
+    constraintId,
+    mechanism: "llm",
+    rawOutput: rawResponse,
+    normalizedScore: score,
+    durationMs,
+    success: true,
+  };
+}

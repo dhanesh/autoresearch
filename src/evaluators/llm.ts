@@ -3,27 +3,28 @@
 
 import type { EvalResult, NormalizedScore } from "../types";
 
-/** The rubric dimensions for LLM evaluation. Satisfies: RT-3 (independence from other axes) */
+/** The rubric dimensions for LLM evaluation. Satisfies: RT-3 (independence from other axes)
+ *  Grounded in Uncle Bob's Clean Code and Clean Architecture principles. */
 export const LLM_RUBRIC_DIMENSIONS = [
   {
     name: "readability",
     weight: 0.25,
-    prompt: "Rate code readability (naming clarity, logical flow, self-documenting style) on 0-100.",
+    prompt: "Rate code readability using Clean Code principles (Ch.2 Meaningful Names: intention-revealing names, no disinformation, pronounceable/searchable names; Ch.3 Functions: small functions that do one thing, descriptive names, few arguments; Ch.4 Comments: code should be self-documenting, comments only where intent isn't obvious) on 0-100.",
   },
   {
     name: "architecture",
     weight: 0.25,
-    prompt: "Rate architectural quality (separation of concerns, cohesion, coupling, modularity) on 0-100.",
+    prompt: "Rate architectural quality using Clean Architecture principles (Dependency Rule: dependencies point inward toward domain; Single Responsibility: each module has one reason to change; Interface Segregation: no forced dependency on unused interfaces; Dependency Inversion: depend on abstractions not concretions; clear boundaries between domain logic, use cases, adapters, and infrastructure) on 0-100.",
   },
   {
     name: "maintainability",
     weight: 0.25,
-    prompt: "Rate maintainability (ease of modification, test-friendliness, documentation quality) on 0-100.",
+    prompt: "Rate maintainability using Clean Code principles (DRY: no duplicated logic or knowledge; Open/Closed: open for extension, closed for modification; testability: pure functions, injected dependencies, no hidden side effects; minimal coupling between modules; no god classes or monolithic files) on 0-100.",
   },
   {
     name: "idiomaticness",
     weight: 0.25,
-    prompt: "Rate how idiomatic the code is for its language/framework (follows conventions, uses standard patterns) on 0-100.",
+    prompt: "Rate how idiomatic and well-structured the code is (Boy Scout Rule: leave it cleaner than you found it; follows language/framework conventions; uses standard patterns; no magic numbers — uses named constants; no premature abstraction; appropriate error handling at system boundaries only) on 0-100.",
   },
 ] as const;
 
@@ -39,10 +40,10 @@ export function buildLlmEvalPrompt(
     .join("\n\n");
 
   const reportInstruction = isFullReport
-    ? `\n\nADDITIONALLY: For each change, explain WHY it improves the code. What pattern does it apply? What was wrong with the original? This explanation is for developer learning.`
+    ? `\n\nADDITIONALLY: For each change, explain WHY it improves the code using Clean Code and Clean Architecture terminology. Reference specific principles (e.g., SRP, DIP, DRY, Dependency Rule). What was wrong with the original? What pattern does the fix apply? This explanation is for developer learning.`
     : "";
 
-  return `You are evaluating code changes for quality. Score each dimension 0-100.
+  return `You are evaluating code changes for quality using Uncle Bob's Clean Code and Clean Architecture principles as the evaluation framework. Score each dimension 0-100.
 
 ## Changed Files
 
@@ -161,7 +162,7 @@ export function buildLiteProbePrompt(
     .map((f) => `### ${f.path}\n\`\`\`diff\n${f.diff}\n\`\`\``)
     .join("\n\n");
 
-  return `You are evaluating code changes on a single quality dimension. Score 0-100.
+  return `You are evaluating code changes on a single quality dimension using Clean Code and Clean Architecture principles. Score 0-100.
 
 ## Changed Files
 

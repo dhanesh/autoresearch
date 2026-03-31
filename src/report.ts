@@ -2,12 +2,8 @@
 // Satisfies: U3 (Convergence Communication)
 // Summary report generator — produces the final markdown report
 
+import { computeImprovementPct, lastIteration } from "./shared";
 import type { AutoresearchReport, IterationScores, LoopState } from "./types";
-
-/** Get the most recent iteration from state, or undefined if none exist */
-function lastIteration(state: LoopState): IterationScores | undefined {
-  return state.iterations[state.iterations.length - 1];
-}
 
 /** Build the final report from loop state. Satisfies: B3, U1, TN7 */
 export function buildReport(
@@ -20,19 +16,12 @@ export function buildReport(
 
   for (const [id, baselineScore] of Object.entries(state.baseline.scores)) {
     const finalScore = finalScores[id] ?? baselineScore;
-    if (baselineScore > 0) {
-      improvement[id] = ((finalScore - baselineScore) / baselineScore) * 100;
-    } else {
-      improvement[id] = finalScore > 0 ? 100 : 0;
-    }
+    improvement[id] = computeImprovementPct(baselineScore, finalScore);
   }
 
   const baselineComposite = state.baseline.compositeScore;
   const finalComposite = latest?.compositeScore ?? baselineComposite;
-  const compositeImprovement =
-    baselineComposite > 0
-      ? ((finalComposite - baselineComposite) / baselineComposite) * 100
-      : 0;
+  const compositeImprovement = computeImprovementPct(baselineComposite, finalComposite);
 
   return {
     runId: state.runId,
@@ -149,7 +138,7 @@ export function renderReportMarkdown(report: AutoresearchReport): string {
 export function formatConvergenceMessage(state: LoopState): string {
   const plateauSlice = state.iterations.slice(-state.config.plateauWindow);
   const deltas = plateauSlice.map((i) => i.delta.toFixed(2)).join(", ");
-  const latest = lastIteration(state);
+  const latest = lastIteration(state) as IterationScores | undefined;
   const totalImprovement = latest
     ? latest.compositeScore - state.baseline.compositeScore
     : 0;

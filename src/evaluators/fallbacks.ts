@@ -2,7 +2,14 @@
 // Satisfies: O1 (Graceful Denial), T6 (Evaluation Completeness)
 // Resolution: TN4-A (Auto-Substitution)
 
+import { rebalanceWeights as rebalanceWeightsShared } from "../shared";
 import type { EvalConstraint, FallbackEvaluator, UnhashedConstraint } from "../types";
+
+// Named constants for fallback correlation expectations (Clean Code Ch.17)
+/** Expected correlation between exact-key fallback and primary evaluator */
+const EXACT_KEY_FALLBACK_CORRELATION = 0.5;
+/** Expected correlation between mechanism-only fallback and primary evaluator */
+const MECHANISM_FALLBACK_CORRELATION = 0.6;
 
 /**
  * Fallback evaluator registry.
@@ -80,7 +87,7 @@ export function findFallback(
         id: `fallback-${constraint.id}`,
         weight: constraint.weight,
       },
-      expectedCorrelation: 0.6,
+      expectedCorrelation: MECHANISM_FALLBACK_CORRELATION,
     };
   }
 
@@ -91,7 +98,7 @@ export function findFallback(
       id: `fallback-${constraint.id}`,
       weight: constraint.weight,
     },
-    expectedCorrelation: 0.5,
+    expectedCorrelation: EXACT_KEY_FALLBACK_CORRELATION,
   };
 }
 
@@ -125,18 +132,11 @@ export function activateFallback(
   });
 }
 
-/** Rebalance weights after dropping a constraint. Satisfies: O1 */
+/** Rebalance weights after dropping a constraint. Satisfies: O1
+ *  Delegates to shared rebalanceWeights (DRY — Clean Code Ch.17) */
 export function rebalanceWeights(
   constraints: EvalConstraint[],
   droppedId: string
 ): EvalConstraint[] {
-  const remaining = constraints.filter((c) => c.id !== droppedId);
-  const totalWeight = remaining.reduce((sum, c) => sum + c.weight, 0);
-
-  if (totalWeight <= 0 || remaining.length === 0) return remaining;
-
-  return remaining.map((c) => ({
-    ...c,
-    weight: c.weight / totalWeight,
-  }));
+  return rebalanceWeightsShared(constraints, droppedId);
 }

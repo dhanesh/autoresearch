@@ -3,6 +3,7 @@
 // Satisfies: U2 (Token Dashboard), U3 (Confidence Intervals), U4 (Trajectory Visualization)
 // Resolution: TN2-C (Pre-computed rigor, runtime CI only)
 
+import { computeImprovementPct } from "./shared";
 import type {
   ConfidenceInterval,
   ConstraintTokenUsage,
@@ -12,6 +13,16 @@ import type {
   ProductionReport,
   TokenBreakdown,
 } from "./types";
+
+// Named constants replacing magic numbers (Clean Code Ch.17)
+/** Assumed fraction of tokens that are input (for cost estimation) */
+const INPUT_TOKEN_FRACTION = 0.6;
+/** Assumed fraction of tokens that are output (for cost estimation) */
+const OUTPUT_TOKEN_FRACTION = 0.4;
+/** t-distribution critical values for small sample confidence intervals */
+const T_DISTRIBUTION_VALUES: Record<number, number> = { 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571 };
+/** Fallback z-value for large samples (approximates t-distribution) */
+const LARGE_SAMPLE_Z_VALUE = 1.96;
 
 // ─── Token Accounting (RT-3) ─────────────────────────────────────────────────
 
@@ -44,9 +55,8 @@ export function estimateCost(
   inputPricePer1k: number = 0.003,
   outputPricePer1k: number = 0.015
 ): number {
-  // Assume roughly 60% input, 40% output split
-  const inputTokens = tokens * 0.6;
-  const outputTokens = tokens * 0.4;
+  const inputTokens = tokens * INPUT_TOKEN_FRACTION;
+  const outputTokens = tokens * OUTPUT_TOKEN_FRACTION;
   return (inputTokens / 1000) * inputPricePer1k + (outputTokens / 1000) * outputPricePer1k;
 }
 
@@ -65,9 +75,7 @@ export function computeConfidenceInterval(
   const variance = scores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
 
-  // t-distribution approximation for small samples (z=1.96 for large n)
-  const tValues: Record<number, number> = { 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571 };
-  const t = tValues[n] ?? 1.96;
+  const t = T_DISTRIBUTION_VALUES[n] ?? LARGE_SAMPLE_Z_VALUE;
   const margin = t * (stdDev / Math.sqrt(n));
 
   return {
@@ -301,16 +309,12 @@ export function buildProductionReport(
   const improvement: Record<string, number> = {};
   for (const [id, baselineScore] of Object.entries(state.baseline.scores)) {
     const finalScore = finalScores[id] ?? baselineScore;
-    improvement[id] = baselineScore > 0
-      ? ((finalScore - baselineScore) / baselineScore) * 100
-      : finalScore > 0 ? 100 : 0;
+    improvement[id] = computeImprovementPct(baselineScore, finalScore);
   }
 
   const baselineComposite = state.baseline.compositeScore;
   const finalComposite = latest?.compositeScore ?? baselineComposite;
-  const compositeImprovement = baselineComposite > 0
-    ? ((finalComposite - baselineComposite) / baselineComposite) * 100
-    : 0;
+  const compositeImprovement = computeImprovementPct(baselineComposite, finalComposite);
 
   const curve = fitDiminishingReturnsCurve(state.iterations);
   const optimalStop = findOptimalStopIteration(state.iterations, state.config.tokenBudget);

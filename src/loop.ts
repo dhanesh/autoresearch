@@ -3,25 +3,37 @@
 // Satisfies: T1 (Git Branch Isolation), T6 (Parallel Eval), TN4 (Retry Before Trip), TN6 (Plateau Window)
 // Core loop engine — orchestrates the improve-evaluate-iterate cycle
 
+import type { CompositeScoreResult } from "./scoring";
+import { DEFAULT_SCORING, phaseAdaptiveComposite } from "./scoring";
+import { lastIteration } from "./shared";
 import type {
   EvalResult,
   IterationScores,
   LoopConfig,
   LoopState,
   NormalizedScore,
+  ScoringConfig,
 } from "./types";
 
-/** Get the most recent iteration from state, or undefined if none exist */
-function lastIteration(state: LoopState): IterationScores | undefined {
-  return state.iterations[state.iterations.length - 1];
+/** Clock abstraction for testability — avoids hidden side effects (Clean Code Ch.3) */
+export interface Clock {
+  now(): number;
+  isoString(): string;
 }
+
+/** Default clock that delegates to system time */
+export const SystemClock: Clock = {
+  now: () => Date.now(),
+  isoString: () => new Date().toISOString(),
+};
 
 /** Initialize a new loop state with baseline scores. Satisfies: RT-2, RT-6, T1 */
 export function initLoopState(
   config: LoopConfig,
   scope: string[],
   baseline: IterationScores,
-  branch: string
+  branch: string,
+  clock: Clock = SystemClock,
 ): LoopState {
   const bestScores: Record<string, NormalizedScore> = {};
   for (const [id, score] of Object.entries(baseline.scores)) {
@@ -29,10 +41,10 @@ export function initLoopState(
   }
 
   return {
-    runId: `ar-${Date.now()}`,
+    runId: `ar-${clock.now()}`,
     branch,
     scope,
-    startedAt: new Date().toISOString(),
+    startedAt: clock.isoString(),
     config,
     baseline,
     iterations: [],
@@ -56,7 +68,7 @@ export interface StopCondition {
 
 /** Check if the loop should continue. Satisfies: O1, O2, O4, T5, TN6
  *  Returns null if should continue, or stop reason if should stop */
-export function shouldStop(state: LoopState): StopCondition | null {
+export function shouldStop(state: LoopState, clock: Clock = SystemClock): StopCondition | null {
   // O1: Max iterations cap
   if (state.currentIteration >= state.config.maxIterations) {
     return {
@@ -75,7 +87,7 @@ export function shouldStop(state: LoopState): StopCondition | null {
 
   // O4: Wall-clock timeout
   const elapsed =
-    (Date.now() - new Date(state.startedAt).getTime()) / 1000;
+    (clock.now() - new Date(state.startedAt).getTime()) / 1000;
   if (elapsed >= state.config.totalTimeoutSeconds) {
     return {
       reason: "timeout",
@@ -101,32 +113,30 @@ export interface IterationProcessResult {
   regressionDetails?: string;
 }
 
-/** Aggregated scores and weighted composite from a set of evaluation results */
-interface CompositeResult {
-  scores: Record<string, NormalizedScore>;
-  compositeScore: NormalizedScore;
-}
-
 /** A detected regression in a single constraint */
 interface RegressionInfo {
   constraintId: string;
   regressionPct: number;
 }
 
-/** Build the score map and weighted composite from evaluation results */
-function computeComposite(results: EvalResult[]): CompositeResult {
-  const scores: Record<string, NormalizedScore> = {};
+/** Build composite score using the phase-adaptive scoring engine.
+ *  Delegates to scoring.ts instead of reimplementing (DRY — Clean Architecture Dependency Rule). */
+function computeCompositeFromResults(
+  results: EvalResult[],
+  state: LoopState,
+  scoringConfig: ScoringConfig = DEFAULT_SCORING,
+): CompositeScoreResult {
+  const weights: Record<string, number> = {};
   for (const r of results) {
-    scores[r.constraintId] = r.normalizedScore;
+    weights[r.constraintId] = 1 / results.length;
   }
-
-  const count = results.length;
-  const compositeScore =
-    count > 0
-      ? Math.round(results.reduce((sum, r) => sum + r.normalizedScore, 0) / count)
-      : 0;
-
-  return { scores, compositeScore };
+  return phaseAdaptiveComposite(
+    results,
+    weights,
+    scoringConfig,
+    state.currentIteration,
+    state.config.maxIterations,
+  );
 }
 
 /** Check if any constraint regressed beyond the circuit breaker threshold. Satisfies: O3 */
@@ -146,14 +156,17 @@ function checkCircuitBreaker(
   return null;
 }
 
-/** Process evaluation results for an iteration. Satisfies: RT-6, O3, TN4, TN6 */
+/** Process evaluation results for an iteration. Satisfies: RT-6, O3, TN4, TN6
+ *  Now uses phase-adaptive composite scoring instead of naive averaging.
+ *  Accepts an optional Clock for testability (Clean Code Ch.3 — no hidden side effects). */
 export function processIterationResults(
   state: LoopState,
   results: EvalResult[],
   tokensUsed: number,
-  durationMs: number
+  durationMs: number,
+  clock: Clock = SystemClock,
 ): IterationProcessResult {
-  const { scores, compositeScore } = computeComposite(results);
+  const { scores, compositeScore } = computeCompositeFromResults(results, state);
 
   const prevComposite = lastIteration(state)?.compositeScore ?? state.baseline.compositeScore;
 
@@ -165,7 +178,7 @@ export function processIterationResults(
     return {
       scores: {
         iteration: state.currentIteration + 1,
-        timestamp: new Date().toISOString(),
+        timestamp: clock.isoString(),
         scores,
         compositeScore,
         delta,
@@ -183,7 +196,7 @@ export function processIterationResults(
   return {
     scores: {
       iteration: state.currentIteration + 1,
-      timestamp: new Date().toISOString(),
+      timestamp: clock.isoString(),
       scores,
       compositeScore,
       delta,
@@ -234,10 +247,10 @@ export function updateState(
 }
 
 /** Format live progress line for display. Satisfies: U1 */
-export function formatProgress(state: LoopState): string {
+export function formatProgress(state: LoopState, clock: Clock = SystemClock): string {
   const latest = lastIteration(state);
   const elapsed = Math.round(
-    (Date.now() - new Date(state.startedAt).getTime()) / 1000
+    (clock.now() - new Date(state.startedAt).getTime()) / 1000
   );
 
   if (!latest) {
@@ -254,8 +267,8 @@ export function formatProgress(state: LoopState): string {
 }
 
 /** Generate git branch name. Satisfies: T1 */
-export function generateBranchName(scope: string[]): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+export function generateBranchName(scope: string[], clock: Clock = SystemClock): string {
+  const timestamp = clock.isoString().replace(/[:.]/g, "-").slice(0, 19);
   const scopeSlug = scope
     .map((s) => s.replace(/[^a-zA-Z0-9]/g, "-"))
     .join("_")

@@ -4,6 +4,18 @@
 import type { EvalResult, NormalizedScore } from "../types";
 import { formatError } from "./custom";
 
+// Named constants replacing magic numbers (Clean Code Ch.17)
+/** Penalty weight per lint error in score calculation */
+const LINT_ERROR_PENALTY = 2;
+/** Penalty weight per lint warning in score calculation */
+const LINT_WARNING_PENALTY = 0.5;
+/** Penalty per TypeScript compiler error in score calculation */
+const TSC_ERROR_PENALTY = 5;
+/** Cyclomatic complexity threshold for perfect score (avg <= this = 100) */
+const COMPLEXITY_LOW_THRESHOLD = 5;
+/** Cyclomatic complexity threshold for zero score (avg >= this = 0) */
+const COMPLEXITY_HIGH_THRESHOLD = 30;
+
 /** Parse ESLint JSON output and normalize to 0-100 score (100 = no issues) */
 export function normalizeEslintOutput(raw: string): NormalizedScore {
   try {
@@ -14,8 +26,7 @@ export function normalizeEslintOutput(raw: string): NormalizedScore {
       totalErrors += r.errorCount;
       totalWarnings += r.warningCount;
     }
-    // Score: 100 minus weighted penalties (errors=2pts, warnings=0.5pts), floor at 0
-    const penalty = totalErrors * 2 + totalWarnings * 0.5;
+    const penalty = totalErrors * LINT_ERROR_PENALTY + totalWarnings * LINT_WARNING_PENALTY;
     return Math.max(0, Math.min(100, Math.round(100 - penalty)));
   } catch {
     return 0;
@@ -27,7 +38,7 @@ export function normalizeTscOutput(raw: string): NormalizedScore {
   const errorMatch = raw.match(/Found (\d+) error/);
   if (!errorMatch) return raw.includes("error") ? 50 : 100;
   const errors = parseInt(errorMatch[1], 10);
-  return Math.max(0, 100 - errors * 5);
+  return Math.max(0, 100 - errors * TSC_ERROR_PENALTY);
 }
 
 /** Parse cyclomatic complexity output (average) and normalize.
@@ -37,10 +48,10 @@ export function normalizeComplexityOutput(raw: string): NormalizedScore {
     const avgMatch = raw.match(/average[:\s]+(\d+\.?\d*)/i);
     if (!avgMatch) return 50;
     const avg = parseFloat(avgMatch[1]);
-    // Score mapping: 1-5 = 100, 10 = 70, 20 = 30, 30+ = 0
-    if (avg <= 5) return 100;
-    if (avg >= 30) return 0;
-    return Math.round(100 - (avg - 5) * (100 / 25));
+    if (avg <= COMPLEXITY_LOW_THRESHOLD) return 100;
+    if (avg >= COMPLEXITY_HIGH_THRESHOLD) return 0;
+    const range = COMPLEXITY_HIGH_THRESHOLD - COMPLEXITY_LOW_THRESHOLD;
+    return Math.round(100 - (avg - COMPLEXITY_LOW_THRESHOLD) * (100 / range));
   } catch {
     return 50;
   }

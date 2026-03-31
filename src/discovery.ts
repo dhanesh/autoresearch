@@ -4,6 +4,7 @@
 // Constraint discovery engine — analyzes codebase and builds evaluation constraints
 
 import { hashCommand } from "./evaluators/custom";
+import { rebalanceWeights } from "./shared";
 import type { CodebaseProfile, EvalConstraint, EvalMechanism, UnhashedConstraint } from "./types";
 
 /** What a file pattern indicates about the codebase */
@@ -156,14 +157,5 @@ export function finalizeConstraints(
   }));
 }
 
-/** Rebalance constraint weights to sum to 1.0 */
-export function rebalanceWeights(
-  constraints: EvalConstraint[]
-): EvalConstraint[] {
-  const totalWeight = constraints.reduce((sum, c) => sum + c.weight, 0);
-  if (totalWeight === 0) return constraints;
-  return constraints.map((c) => ({
-    ...c,
-    weight: c.weight / totalWeight,
-  }));
-}
+// rebalanceWeights is re-exported from shared.ts (DRY — Clean Code Ch.17)
+export { rebalanceWeights } from "./shared";

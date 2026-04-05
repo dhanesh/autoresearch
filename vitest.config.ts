@@ -1,3 +1,4 @@
+// Satisfies: T2 (coverage thresholds), O2 (quality gate enforcement)
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -7,6 +8,11 @@ export default defineConfig({
       provider: "v8",
       include: ["src/**/*.ts"],
       reporter: ["text", "text-summary"],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+      },
     },
   },
 });

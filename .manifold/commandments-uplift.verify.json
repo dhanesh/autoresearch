@@ -1,0 +1,413 @@
+{
+  "verification": {
+    "timestamp": "2026-04-05T00:00:00Z",
+    "result": "SATISFIED",
+    "tests_executed": true,
+    "tests_total": 225,
+    "tests_passed": 225,
+    "tests_failed": 0,
+    "artifacts_declared": 17,
+    "artifacts_verified": 17,
+    "evidence_verified": 20,
+    "evidence_passed": 20,
+    "evidence_failed": 0,
+    "matrix": [
+      {
+        "constraint": "B1",
+        "type": "goal",
+        "code": true,
+        "test": true,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "B2",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "B3",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "IMPLEMENTED",
+        "note": "Verified via file_exists evidence (vendor/zod.js + install.sh vendor handling)"
+      },
+      {
+        "constraint": "T1",
+        "type": "goal",
+        "code": true,
+        "test": false,
+        "docs": false,
+        "ops": true,
+        "status": "SATISFIED",
+        "level": "IMPLEMENTED",
+        "note": "CI workflow file exists with correct setup-bun action"
+      },
+      {
+        "constraint": "T2",
+        "type": "boundary",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": true,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "T3",
+        "type": "goal",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "T4",
+        "type": "goal",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "T5",
+        "type": "boundary",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "T6",
+        "type": "goal",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "T7",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "T8",
+        "type": "goal",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "U1",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "U2",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "U3",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "S1",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "S2",
+        "type": "invariant",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "O1",
+        "type": "goal",
+        "code": false,
+        "test": false,
+        "docs": true,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "DOCUMENTED"
+      },
+      {
+        "constraint": "O2",
+        "type": "goal",
+        "code": true,
+        "test": true,
+        "docs": false,
+        "ops": true,
+        "status": "SATISFIED",
+        "level": "VERIFIED"
+      },
+      {
+        "constraint": "O3",
+        "type": "invariant",
+        "code": true,
+        "test": false,
+        "docs": false,
+        "ops": false,
+        "status": "SATISFIED",
+        "level": "IMPLEMENTED",
+        "note": "install.sh contains vendor copy logic, verified via content_match"
+      }
+    ],
+    "coverage": {
+      "invariants": {
+        "satisfied": 8,
+        "total": 8,
+        "percentage": 100
+      },
+      "goals": {
+        "satisfied": 6,
+        "total": 6,
+        "percentage": 100
+      },
+      "boundaries": {
+        "satisfied": 2,
+        "total": 2,
+        "percentage": 100
+      }
+    },
+    "levels_breakdown": {
+      "VERIFIED": 13,
+      "TESTED": 0,
+      "IMPLEMENTED": 3,
+      "DOCUMENTED": 1
+    },
+    "evidence_status": [
+      {
+        "id": "E1",
+        "type": "file_exists",
+        "path": "plugin/lib/vendor/zod.js",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E2",
+        "type": "content_match",
+        "path": "install/install.sh",
+        "pattern": "vendor",
+        "matches": 11,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E3",
+        "type": "content_match",
+        "path": "src/schemas.ts",
+        "pattern": "safeParse",
+        "matches": 6,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E4",
+        "type": "test_passes",
+        "path": "tests/parallel.test.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E5",
+        "type": "file_exists",
+        "path": "src/logger.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E6",
+        "type": "test_passes",
+        "path": "tests/logger.test.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E7",
+        "type": "content_match",
+        "path": "src/logger.ts",
+        "pattern": "if (!onLog) return",
+        "matches": 1,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E8",
+        "type": "test_passes",
+        "path": "tests/**/*.test.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E9",
+        "type": "file_exists",
+        "path": "src/schemas.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E10",
+        "type": "test_passes",
+        "path": "tests/schemas.test.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E11",
+        "type": "content_match",
+        "path": "src/schemas.ts",
+        "pattern": "safeParseLlmResponse",
+        "matches": 1,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E12",
+        "type": "file_exists",
+        "path": ".github/workflows/ci.yml",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E13",
+        "type": "content_match",
+        "path": ".github/workflows/ci.yml",
+        "pattern": "setup-bun",
+        "matches": 1,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E14",
+        "type": "content_match",
+        "path": "vitest.config.ts",
+        "pattern": "thresholds",
+        "matches": 2,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E15",
+        "type": "content_match",
+        "path": "vitest.config.ts",
+        "pattern": "lines: 80",
+        "matches": 1,
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E16",
+        "type": "test_passes",
+        "path": "tests/**/*.test.ts",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E17",
+        "type": "file_exists",
+        "path": "docs/adr/001-state-machine-design.md",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E18",
+        "type": "file_exists",
+        "path": "docs/adr/002-circuit-breaker-strategy.md",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E19",
+        "type": "file_exists",
+        "path": "docs/adr/003-adaptive-scheduling.md",
+        "status": "VERIFIED"
+      },
+      {
+        "id": "E20",
+        "type": "file_exists",
+        "path": "docs/adr/004-permission-manifest.md",
+        "status": "VERIFIED"
+      }
+    ],
+    "enhancement_checks": {
+      "genealogy": {
+        "invariant_assumption_risks": [],
+        "unconfirmed_assumptions": [],
+        "regulation_tradeoffs": [],
+        "status": "PASS"
+      },
+      "reversibility": {
+        "one_way_without_watch": [],
+        "status": "PASS",
+        "note": "All 10 steps are TWO_WAY — no irreversible actions"
+      },
+      "propagation": {
+        "violated_effects": [],
+        "tightened_assumptions": [],
+        "status": "PASS"
+      },
+      "binding_constraint": {
+        "rt_id": "RT-1",
+        "status": "SATISFIED",
+        "note": "Binding constraint RT-1 (zod bundle) fully addressed: vendor/zod.js exists, install.sh handles vendor/, schemas.ts uses safeParse"
+      }
+    },
+    "gaps": []
+  },
+  "file_hashes": {
+    "plugin/lib/vendor/zod.js": "eab3b09b10ae69fbeb9cbe674423b4dd3f245d437ca5835279257624c9ac5c1a",
+    ".github/workflows/ci.yml": "687476c72933c86cdae42e2e60c77223d0d4423d63c286e3c4f47ad0416c6693",
+    "vitest.config.ts": "0fff1f8e437ab12155d59ef174d5f9f608a140df54f25948981cb6d415b48ba7",
+    "install/install.sh": "ed85133b34506690b322d324b6c47175bb8e3b354e6ea49108c0e8e76d64c77d",
+    "src/logger.ts": "d9d2f7a63dd3f8baee1208b075f9934d9f1566a9bd0aaccde514a5ce72fcf267",
+    "src/retry.ts": "1d28cde1df8c07cfa628912a4be7f3552b1236a8ec364710defa2804b5923947",
+    "src/schemas.ts": "5aa0316529f95cc0765d42694df7769d222990ed156aa691d4aedd228bda6d43",
+    "src/parallel.ts": "bed2449e382d37e0d2a91cc8b68272d3eb8d75c2e2f023871b43290c4cc63fcc",
+    "tests/logger.test.ts": "b599a0a7365c75888f17727195792cae57aa7addbc955f2a7227d61682f9ddc9",
+    "tests/retry.test.ts": "aeacfee7b4d2de84e2dd2d998d3504c6cfca8d7fcbc6631fa7986dc9f8a56d2b",
+    "tests/schemas.test.ts": "b9aa90fa6f9fdadb88e60ce13ecd7663e81e05f3f51419720d8cd3ee3eb554dd",
+    "tests/parallel.test.ts": "7e0dfb9e9456caf4466805874bcc94d9cbfe14df9f17b5eb75246bd1d1a8145c",
+    "tests/integration/loop-lifecycle.test.ts": "02a2c4ef0d55a76dfc295dc423c380a4b706b523528d007c3653c713d6569163",
+    "docs/adr/001-state-machine-design.md": "aa49d59dbf0c2ad80cb994cdec4da9f508ac13fd9c8ac8831d4d888e1781dfe6",
+    "docs/adr/002-circuit-breaker-strategy.md": "2aa32fa0f6f8e5d9b417eb3ed77d6f92c31d6fe62d21f496ed86194d951ef426",
+    "docs/adr/003-adaptive-scheduling.md": "18ebcda83d6595b7585ac183a1bbc028f33d2b60764677c9469b090e7dd5e55e",
+    "docs/adr/004-permission-manifest.md": "2470051d970ea29b1227dc7886a0d2d3cbd53ce802320cff1825c382b368a1a5"
+  },
+  "hashes_updated_at": "2026-04-05T16:35:33.965Z"
+}

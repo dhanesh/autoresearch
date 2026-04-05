@@ -98,6 +98,15 @@ if [ -d "$CLAUDE_DIR" ]; then
   done
   ok "  Lib:     9 reference modules → $LIB_DIR/"
 
+  # Copy vendor dependencies (bundled zod). Satisfies: RT-1, O3
+  if [ -d "$PLUGIN_SRC/lib/vendor" ]; then
+    mkdir -p "$LIB_DIR/vendor"
+    for vendor_file in "$PLUGIN_SRC/lib/vendor"/*; do
+      [ -f "$vendor_file" ] && cp "$vendor_file" "$LIB_DIR/vendor/"
+    done
+    ok "Copied vendor dependencies"
+  fi
+
   # ── Install profiles ──────────────────────────────────────────────
 
   PROFILES_DIR="$CLAUDE_SKILLS/$PLUGIN_NAME/profiles"
@@ -143,6 +152,14 @@ if [ -d "$AMP_DIR" ]; then
     fi
   done
   ok "  Lib:     9 reference modules → $AMP_SKILLS/lib/"
+
+  # Copy vendor dependencies for AMP. Satisfies: RT-1, O3
+  if [ -d "$PLUGIN_SRC/lib/vendor" ]; then
+    mkdir -p "$AMP_SKILLS/lib/vendor"
+    for vendor_file in "$PLUGIN_SRC/lib/vendor"/*; do
+      [ -f "$vendor_file" ] && cp "$vendor_file" "$AMP_SKILLS/lib/vendor/"
+    done
+  fi
 
   # Profiles
   for profile in "$PLUGIN_SRC/profiles/"*.json; do
